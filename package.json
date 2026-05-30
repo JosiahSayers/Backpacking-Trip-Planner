@@ -1,0 +1,37 @@
+{
+  "name": "bun-quickstart",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "predev": "docker compose -f docker-compose.dev.yml up -d",
+    "dev": "VERSION=$(cat version) NODE_ENV=development bun --watch index.ts",
+    "dev:workers": "NODE_ENV=development bun --watch app/jobs/workers/index.ts",
+    "db:reset": "bunx --bun prisma migrate reset && bun db:migrate && bun db:seed",
+    "db:migrate": "bunx --bun prisma migrate dev && bunx --bun prisma generate",
+    "test": "bun test --watch",
+    "test:single": "bun test",
+    "docker:publish": "docker buildx build --build-arg BUILD_VERSION=$(cat version) --push --platform linux/amd64 -t REPLACE_ME/$npm_package_name:latest -t REPLACE_ME/$npm_package_name:$(cat version) .",
+    "start": "bunx --bun prisma migrate deploy && bun run /usr/src/app/app/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/supertest": "^7.2.0",
+    "prisma": "^7.8.0",
+    "supertest": "^7.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-libsql": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "@types/express": "^5.0.6",
+    "better-auth": "^1.6.9",
+    "bullmq": "^5.76.5",
+    "express": "^5.2.1",
+    "express-zod-safe": "^3.2.1",
+    "winston": "^3.19.0",
+    "zod": "^4.4.2"
+  }
+}

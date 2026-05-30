@@ -1,0 +1,9 @@
+[test]
+preload = ["./tests/preload.ts"]
+coverage = false
+coveragePathIgnorePatterns = [
+  "**/*.test.ts",
+  "tests/preload.ts",
+  "generated/**/*"
+]
+coverageThreshold = 0.9
