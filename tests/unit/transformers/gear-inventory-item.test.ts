@@ -19,6 +19,7 @@ describe("transform", () => {
       category: {
         id: gearCategory.id,
         name: gearCategory.name,
+        public: gearCategory.public,
       },
     });
   });

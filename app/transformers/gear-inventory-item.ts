@@ -2,11 +2,15 @@ import type {
   GearCategory,
   GearInventoryItem,
 } from "../../generated/prisma/client";
+import {
+  transform as transformCategory,
+  type ClientGeatCategory,
+} from "$/transformers/gear-category";
 
-type ClientGearInventoryItem = Pick<
+export type ClientGearInventoryItem = Pick<
   GearInventoryItem,
   "id" | "name" | "quantity"
-> & { category: Pick<GearCategory, "id" | "name"> };
+> & { category: ClientGeatCategory };
 
 export function transform(
   item: GearInventoryItem & { category: GearCategory },
@@ -15,9 +19,6 @@ export function transform(
     id: item.id,
     name: item.name,
     quantity: item.quantity,
-    category: {
-      id: item.category.id,
-      name: item.category.name,
-    },
+    category: transformCategory(item.category),
   };
 }
