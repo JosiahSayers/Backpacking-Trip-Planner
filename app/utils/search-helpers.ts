@@ -1,6 +1,9 @@
 import { db } from "$/utils/db";
 
-export async function searchCategories(searchQuery: string) {
+export async function searchCategories(
+  searchQuery: string,
+  forUserId: string | null = null,
+) {
   const formattedQuery = searchQuery
     .split(" ")
     .map((word) => `${word}:*`) // Make each word a partial match
@@ -9,7 +12,7 @@ export async function searchCategories(searchQuery: string) {
   const results = await db.$queryRaw<Array<{ id: number }>>`
 SELECT "GearCategory".id
   FROM "GearCategory"
-  WHERE "GearCategory".data_fts @@ to_tsquery('english', ${formattedQuery}) AND public=TRUE;
+  WHERE "GearCategory".data_fts @@ to_tsquery('english', ${formattedQuery}) AND (public=TRUE OR "userId"=${forUserId});
 `;
 
   return db.gearCategory.findMany({
