@@ -1,5 +1,5 @@
 import { requireValidSession } from "$/middleware/require-valid-session";
-import { transform } from "$/transformers/gear-category";
+import { transformers } from "$/transformers";
 import { searchCategories } from "$/utils/search-helpers";
 import { gearCategorySearch } from "$/validation/gear-category";
 import { Router } from "express";
@@ -16,6 +16,8 @@ gearCategoriesRouter.get(
       req.query.query,
       req.session!.user.id,
     );
-    return res.json({ categories: matchingCategories.map(transform) });
+    return res.json({
+      categories: matchingCategories.map(transformers.gearCategory),
+    });
   },
 );

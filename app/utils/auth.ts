@@ -1,11 +1,10 @@
 import { db } from "$/utils/db";
-import { betterAuth } from "better-auth";
+import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { testUtils } from "better-auth/plugins";
 
-export const baseAuthConfig = {
+export const baseAuthConfig: BetterAuthOptions = {
   database: prismaAdapter(db, {
-    provider: "sqlite",
+    provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
