@@ -41,6 +41,7 @@ gearInventoryRouter.post(
         quantity: req.body.quantity,
         userId: req.session!.user.id,
         gearCategoryId: category.id,
+        grams: req.body.grams,
       },
       include: {
         category: true,

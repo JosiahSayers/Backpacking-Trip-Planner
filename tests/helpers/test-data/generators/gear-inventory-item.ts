@@ -12,6 +12,7 @@ export default function makeGearInventoryItem(
     updatedAt: faker.date.past(),
     gearCategoryId: faker.number.int(),
     userId: faker.string.uuid(),
+    grams: faker.number.int(5000),
     ...overrides,
   };
 }

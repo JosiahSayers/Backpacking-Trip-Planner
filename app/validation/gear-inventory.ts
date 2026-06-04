@@ -6,6 +6,7 @@ export const createGearInventoryItemValidator = z
     quantity: z.int().default(1),
     existingCategoryId: z.int().optional(),
     newCategoryName: z.string().optional(),
+    grams: z.int().optional(),
   })
   .refine(
     (data) => data.existingCategoryId || data.newCategoryName,

@@ -105,6 +105,7 @@ model GearInventoryItem {
 
   name     String
   quantity Int    @default(1)
+  grams    Int?
 
   category       GearCategory @relation(fields: [gearCategoryId], references: [id])
   gearCategoryId Int
