@@ -4,7 +4,7 @@ import type { OptionalPartial } from "../../../../type-helpers";
 
 export default function makePackingListItem(
   overrides: OptionalPartial<PackingListItem> = {},
-) {
+): PackingListItem {
   return {
     id: faker.number.int(),
     name: faker.commerce.productName(),
@@ -12,6 +12,10 @@ export default function makePackingListItem(
     gearCategoryId: faker.number.int(),
     gearInventoryItemId: faker.number.int(),
     packingListSectionId: faker.number.int(),
+    createdAt: faker.date.past(),
+    updatedAt: faker.date.past(),
+    quantity: faker.number.int(5),
+    optional: false,
     ...overrides,
   };
 }

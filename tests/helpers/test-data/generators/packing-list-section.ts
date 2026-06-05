@@ -4,12 +4,14 @@ import type { OptionalPartial } from "../../../../type-helpers";
 
 export default function makePackingListSection(
   overrides: OptionalPartial<PackingListSection> = {},
-) {
+): PackingListSection {
   return {
     id: faker.number.int(),
     name: faker.animal.insect(),
     packingListId: faker.number.int(),
     sortPosition: faker.number.int(),
+    createdAt: faker.date.past(),
+    updatedAt: faker.date.past(),
     ...overrides,
   };
 }
