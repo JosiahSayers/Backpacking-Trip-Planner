@@ -132,6 +132,25 @@ packingListRouter.post(
       },
     });
 
-    return res.json({ packingList: transformers.packingList(packingList!) });
+    return res
+      .status(201)
+      .json({ packingList: transformers.packingList(packingList!) });
   },
 );
+
+packingListRouter.delete("/:id", async (req, res) => {
+  const packingList = await db.packingList.findUnique({
+    where: { id: Number(req.params.id) },
+  });
+
+  if (!packingList) {
+    return res.sendStatus(404);
+  }
+
+  if (packingList.userId !== req.session!.user.id) {
+    return res.sendStatus(403);
+  }
+
+  await db.packingList.delete({ where: { id: packingList.id } });
+  return res.sendStatus(200);
+});
