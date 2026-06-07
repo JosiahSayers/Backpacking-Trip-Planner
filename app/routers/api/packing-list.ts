@@ -4,8 +4,6 @@ import { db } from "$/utils/db";
 import { newPackingList, packingListSearch } from "$/validation/packing-list";
 import { Router } from "express";
 import validate from "express-zod-safe";
-import type { PackingList } from "../../../generated/prisma/client";
-import type { FullPackingList } from "$/transformers/packing-list";
 
 export const packingListRouter = Router();
 packingListRouter.use(requireValidSession);
@@ -87,7 +85,7 @@ packingListRouter.post(
       }
 
       await db.$transaction(async (tx) => {
-        const newPackingList = await db.packingList.create({
+        const newPackingList = await tx.packingList.create({
           data: {
             userId: req.session!.user.id,
             name,
@@ -96,7 +94,7 @@ packingListRouter.post(
         });
 
         for (const originalSection of copiedList.packingListSections) {
-          await db.packingListSection.create({
+          await tx.packingListSection.create({
             data: {
               name: originalSection.name,
               sortPosition: originalSection.sortPosition,
