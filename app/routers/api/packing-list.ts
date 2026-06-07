@@ -79,6 +79,9 @@ packingListRouter.post(
       });
 
       if (!copiedList) {
+        req.logger.warn("User tried to copy a non-public list they don't own", {
+          triedToCopyListId: copiedFromPackingListId,
+        });
         return res.status(404).json({
           error: `Could not find an existing packing list with the id: ${copiedFromPackingListId}`,
         });
