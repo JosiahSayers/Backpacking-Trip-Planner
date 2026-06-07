@@ -4,22 +4,22 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "predev": "docker compose -f docker-compose.dev.yml up -d",
+    "predev": "[ \"$NODE_ENV\" != \"ci\" ] && docker compose -f docker-compose.dev.yml up -d || echo \"skipped predev\"",
     "dev": "VERSION=$(cat version) NODE_ENV=development bun --watch index.ts",
     "dev:workers": "NODE_ENV=development bun --watch app/jobs/workers/index.ts",
     "db:reset": "bunx --bun prisma migrate reset && bun db:migrate && bun db:seed",
     "db:migrate": "bunx --bun prisma migrate dev && bunx --bun prisma generate",
     "db:seed": "bun prisma/seeds",
-    "test": "bun test --watch",
-    "test:single": "bun test",
     "docker:publish": "docker buildx build --build-arg BUILD_VERSION=$(cat version) --push --platform linux/amd64 -t josiahsayers15/$npm_package_name:latest -t josiahsayers15/$npm_package_name:$(cat version) .",
-    "start": "bunx --bun prisma migrate deploy && bun run /usr/src/app/app/index.ts"
+    "start": "bunx --bun prisma migrate deploy && bun run /usr/src/app/app/index.ts",
+    "format:check": "prettier . -c"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.4.0",
     "@types/bun": "latest",
     "@types/pg": "^8.20.0",
     "@types/supertest": "^7.2.0",
+    "prettier": "^3.8.3",
     "prisma": "^7.8.0",
     "supertest": "^7.2.2"
   },

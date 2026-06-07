@@ -14,24 +14,30 @@ export const logger = winston.createLogger({
 });
 
 function getTransports() {
-  const transports: transport[] = [
+  const transports: transport[] = [];
+
+  if (Bun.env.SKIP_LOG_WRITE !== "true") {
     //
     // - Write all logs with importance level of `error` or higher to `error.log`
     //   (i.e., error, fatal, but not other levels)
     //
-    new winston.transports.File({
-      filename: `${Bun.env.LOG_FOLDER}/error.log`,
-      level: "error",
-      handleExceptions: true,
-    }),
+    transports.push(
+      new winston.transports.File({
+        filename: `${Bun.env.LOG_FOLDER}/error.log`,
+        level: "error",
+        handleExceptions: true,
+      }),
+    );
     //
     // - Write all logs with importance level of `info` or higher to `combined.log`
     //   (i.e., fatal, error, warn, and info, but not trace)
     //
-    new winston.transports.File({
-      filename: `${Bun.env.LOG_FOLDER}/combined.log`,
-    }),
-  ];
+    transports.push(
+      new winston.transports.File({
+        filename: `${Bun.env.LOG_FOLDER}/combined.log`,
+      }),
+    );
+  }
 
   if (process.env.NODE_ENV !== "production") {
     transports.push(
