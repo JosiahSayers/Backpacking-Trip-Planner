@@ -1,4 +1,9 @@
-import { createUsers } from "./user";
+import applyDevSeeds from "./dev";
+import applyProductionSeeds from "./production";
 
-await createUsers();
-process.exit(0); // script hangs for a few seconds without this
+if (Bun.env.NODE_ENV !== "production") {
+  await applyDevSeeds();
+}
+
+await applyProductionSeeds();
+process.exit(0);

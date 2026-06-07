@@ -1,0 +1,24 @@
+name: CI
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+jobs:
+  run_checks:
+    name: Run Checks
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suite: [test, format:check]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Start compose stack services
+        run: docker compose -f docker-compose.ci.yml up -d --build
+      - name: Generate prisma client
+        run: docker compose -f docker-compose.ci.yml exec -T app bunx --bun prisma generate
+      - name: Run ${{ matrix.suite }}
+        run: docker compose -f docker-compose.ci.yml exec -T app bun ${{ matrix.suite }}
+      - name: Stop Services
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down
