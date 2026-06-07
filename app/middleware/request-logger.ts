@@ -9,6 +9,12 @@ export const requestLogger: Handler = (req, res, next) => {
       ip: req.ip,
       status: res.statusCode,
       redirectLocation: res.getHeader("location"),
+      user: req.session
+        ? {
+            id: req.session.user.id,
+            email: req.session.user.email,
+          }
+        : null,
     });
   });
 
