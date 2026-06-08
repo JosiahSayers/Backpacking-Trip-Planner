@@ -43,16 +43,15 @@ await new Promise((resolve, reject) => {
 
   document
     .fontSize(24)
-    .font("Courier-Bold")
+    .font("./assets/fonts/carter-one.ttf")
     .text(packingList.name, { align: "center" });
   document.moveDown();
 
   document.font("Courier");
   if (packingList.description) {
-    document
-      .fontSize(8)
-      .fillColor("grey")
-      .text(packingList.description, { align: "justify" });
+    document.fontSize(8).fillColor("grey").text(packingList.description, {
+      align: "center",
+    });
     document.moveDown();
   }
 
@@ -94,12 +93,14 @@ await new Promise((resolve, reject) => {
       columnGap) /
     3;
   const columnTextWidth = columnWidth - checkboxGap - checkboxSize;
-  console.log({
-    columnWidth,
-    columnTextWidth,
-    pageWidth: document.page.width,
-    margin: document.page.margins.left,
-  });
+
+  const moveToNextPage = () => {
+    column = 1;
+    currentPage += 1;
+    checkboxX = document.page.margins.left;
+    document.x = document.page.margins.left;
+    document.addPage();
+  };
 
   const columnCalculations = (
     nextString: string,
@@ -124,12 +125,7 @@ await new Promise((resolve, reject) => {
       document.y = newY;
       return true;
     } else if (atEndOfColumn || willOverflowPage) {
-      column = 1;
-      currentPage += 1;
-      checkboxX = document.page.margins.left;
-      document.x = document.page.margins.left;
-      document.y =
-        document.page.height * currentPage + document.page.margins.top;
+      moveToNextPage();
       return true;
     }
 
@@ -139,9 +135,34 @@ await new Promise((resolve, reject) => {
   packingList.packingListSections
     .sort((a, b) => a.sortPosition - b.sortPosition)
     .forEach((section, index) => {
-      // TODO: Calculate height of entire section.
-      // If it will overflow the current page (maybe column?) go ahead and move it before rendering anything
       let titleTopMargin = index === 0 ? 0 : 24;
+      const sectionTitleOptions = {
+        width: columnWidth,
+      };
+      const titleHeight =
+        titleTopMargin +
+        document.heightOfString(section.name, sectionTitleOptions);
+      const optionalTitleHeight = section.items.find((item) => item.optional)
+        ? 12 +
+          document.heightOfString("Optional:", {
+            width: columnWidth,
+            lineGap: lineGap * 2,
+          })
+        : 0;
+      const itemHeights = section.items.reduce((totalHeight, item) => {
+        const itemHeight =
+          1 + document.heightOfString(item.name, { width: columnTextWidth });
+        return (totalHeight += itemHeight);
+      }, 0);
+      const sectionHeight = titleHeight + optionalTitleHeight + itemHeights;
+      const willOverflowPage =
+        column === 3 &&
+        document.y + sectionHeight >
+          document.page.height - document.page.margins.bottom;
+      if (willOverflowPage) {
+        moveToNextPage();
+      }
+
       const overflowed = columnCalculations(
         section.name,
         columnWidth,
@@ -152,9 +173,12 @@ await new Promise((resolve, reject) => {
         .fontSize(12)
         .font("Courier-Bold")
         .lineGap(lineGap * 2)
-        .text(section.name, checkboxX, document.y + titleTopMargin, {
-          width: columnWidth,
-        });
+        .text(
+          section.name,
+          checkboxX,
+          document.y + titleTopMargin,
+          sectionTitleOptions,
+        );
 
       document.fontSize(8).font("Courier").lineGap(lineGap);
 
@@ -172,9 +196,8 @@ await new Promise((resolve, reject) => {
           return a.sortPosition - b.sortPosition;
         })
         .forEach((item) => {
-          columnCalculations(item.name, columnTextWidth);
-
           if (item.optional && !lastItemWasOptional) {
+            columnCalculations("Optional:", columnWidth, 12);
             document.font("Courier-Bold");
             document
               .font("Courier-Bold")
@@ -186,6 +209,8 @@ await new Promise((resolve, reject) => {
             lastItemWasOptional = true;
             document.font("Courier").fontSize(8).lineGap(lineGap);
           }
+
+          columnCalculations(item.name, columnTextWidth, 1);
 
           document
             .rect(checkboxX, document.y, checkboxSize, checkboxSize)
