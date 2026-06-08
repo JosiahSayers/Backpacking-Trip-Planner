@@ -49,9 +49,12 @@ await new Promise((resolve, reject) => {
 
   document.font("Courier");
   if (packingList.description) {
-    document.fontSize(8).fillColor("grey").text(packingList.description, {
-      align: "center",
-    });
+    document
+      .fontSize(8)
+      .fillColor([100, 100, 100])
+      .text(packingList.description, {
+        align: "center",
+      });
     document.moveDown();
   }
 
@@ -60,7 +63,7 @@ await new Promise((resolve, reject) => {
       .fontSize(8)
       .fillColor("black")
       .text("Reference: ", { continued: true })
-      .fillColor("grey")
+      .fillColor([100, 100, 100])
       .text(packingList.sourceUrl, {
         link: packingList.sourceUrl,
         underline: true,
@@ -94,6 +97,15 @@ await new Promise((resolve, reject) => {
     3;
   const columnTextWidth = columnWidth - checkboxGap - checkboxSize;
 
+  const moveToNextColumn = () => {
+    checkboxX =
+      document.page.margins.left + columnGap * column + columnWidth * column;
+    column += 1;
+    const newY = currentPage === 1 ? startingY : document.page.margins.top;
+    document.x = checkboxX;
+    document.y = newY;
+  };
+
   const moveToNextPage = () => {
     column = 1;
     currentPage += 1;
@@ -117,12 +129,7 @@ await new Promise((resolve, reject) => {
       document.page.height - document.page.margins.bottom;
 
     if ((atEndOfColumn || willOverflowPage) && column < 3) {
-      checkboxX =
-        document.page.margins.left + columnGap * column + columnWidth * column;
-      column += 1;
-      const newY = currentPage === 1 ? startingY : document.page.margins.top;
-      document.x = checkboxX;
-      document.y = newY;
+      moveToNextColumn();
       return true;
     } else if (atEndOfColumn || willOverflowPage) {
       moveToNextPage();
@@ -197,13 +204,14 @@ await new Promise((resolve, reject) => {
         })
         .forEach((item) => {
           if (item.optional && !lastItemWasOptional) {
-            columnCalculations("Optional:", columnWidth, 12);
+            const didMove = columnCalculations("Optional:", columnWidth, 12);
+            console.log({ name: item.name, didMove });
             document.font("Courier-Bold");
             document
               .font("Courier-Bold")
               .fontSize(10)
               .lineGap(lineGap * 2)
-              .text("Optional:", checkboxX, document.y + 12, {
+              .text("Optional:", checkboxX, document.y + (didMove ? 0 : 12), {
                 width: columnWidth,
               });
             lastItemWasOptional = true;
@@ -228,4 +236,4 @@ await new Promise((resolve, reject) => {
 });
 console.timeEnd("pdf");
 console.timeLog("pdf");
-process.exit(0);
+await db.$disconnect();
