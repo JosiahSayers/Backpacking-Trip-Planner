@@ -1,4 +1,5 @@
 import { authClient } from "$/frontend/utils/auth-client";
+import { useUnauthenticatedGuard } from "$/frontend/utils/guards/unauthenticated.guard";
 import {
   Anchor,
   Button,
@@ -10,33 +11,27 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 const signInSchema = z.object({
-  email: z.email("Please enter a valid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.email({ error: "Please enter a valid email address" }),
+  password: z.string().min(1, { error: "Password is required" }),
 });
 
 type SignInValues = z.infer<typeof signInSchema>;
 
 export default function SignInPage() {
+  useUnauthenticatedGuard();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [, navigate] = useLocation();
 
   const form = useForm<SignInValues>({
     initialValues: { email: "", password: "" },
-    validate: (values) => {
-      const result = signInSchema.safeParse(values);
-      if (result.success) return {};
-
-      return Object.fromEntries(
-        result.error.issues.map((issue) => [issue.path[0], issue.message]),
-      );
-    },
+    validate: schemaResolver(signInSchema, { sync: true }),
   });
 
   const handleSubmit = async (values: SignInValues) => {

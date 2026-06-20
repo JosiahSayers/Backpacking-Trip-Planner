@@ -1,4 +1,5 @@
 import { authClient } from "$/frontend/utils/auth-client";
+import { useUnauthenticatedGuard } from "$/frontend/utils/guards/unauthenticated.guard";
 import {
   Anchor,
   Button,
@@ -10,40 +11,38 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 const registerSchema = z
   .object({
-    name: z.string().min(1, "Name is required"),
-    email: z.email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
+    name: z.string().min(1, { error: "Name is required" }),
+    email: z.email({ error: "Please enter a valid email address" }),
+    password: z
+      .string()
+      .min(8, { error: "Password must be at least 8 characters" }),
+    confirmPassword: z
+      .string()
+      .min(1, { error: "Please confirm your password" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    error: "Passwords do not match",
     path: ["confirmPassword"],
   });
 
 type RegisterValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  useUnauthenticatedGuard();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [, navigate] = useLocation();
 
   const form = useForm<RegisterValues>({
     initialValues: { name: "", email: "", password: "", confirmPassword: "" },
-    validate: (values) => {
-      const result = registerSchema.safeParse(values);
-      if (result.success) return {};
-
-      return Object.fromEntries(
-        result.error.issues.map((issue) => [issue.path[0], issue.message]),
-      );
-    },
+    validate: schemaResolver(registerSchema, { sync: true }),
   });
 
   const handleSubmit = async (values: RegisterValues) => {
