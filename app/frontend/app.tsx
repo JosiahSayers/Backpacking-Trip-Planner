@@ -6,6 +6,7 @@ import "@mantine/core/styles.css";
 import SignInPage from "$/frontend/pages/sign-in.page";
 import RegisterPage from "$/frontend/pages/register.page";
 import NotFoundPage from "$/frontend/pages/not-found.page";
+import HomePage from "$/frontend/pages/home.page";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <MantineProvider theme={trailTheme}>
         <AppShell>
           <Switch>
+            <Route path="/" component={HomePage} />
             <Route path="/sign-in" component={SignInPage} />
             <Route path="/register" component={RegisterPage} />
             <Route component={NotFoundPage} />
