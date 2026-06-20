@@ -5,6 +5,7 @@ import { Switch, Route } from "wouter";
 import "@mantine/core/styles.css";
 import SignInPage from "$/frontend/pages/sign-in.page";
 import RegisterPage from "$/frontend/pages/register.page";
+import NotFoundPage from "$/frontend/pages/not-found.page";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Switch>
             <Route path="/sign-in" component={SignInPage} />
             <Route path="/register" component={RegisterPage} />
+            <Route component={NotFoundPage} />
           </Switch>
         </AppShell>
       </MantineProvider>
