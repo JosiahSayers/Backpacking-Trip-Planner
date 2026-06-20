@@ -1,10 +1,9 @@
+import AppLink from "$/frontend/app-link";
 import { authClient } from "$/frontend/utils/auth-client";
 import { Button, Group, Text } from "@mantine/core";
-import { useLocation } from "wouter";
 
 export default function HeaderLinks() {
   const session = authClient.useSession();
-  const [, navigate] = useLocation();
 
   if (session.data !== null) {
     return (
@@ -19,12 +18,8 @@ export default function HeaderLinks() {
 
   return (
     <Group>
-      <Button variant="subtle" onClick={() => navigate("/sign-in")}>
-        Sign In
-      </Button>
-      <Button variant="subtle" onClick={() => navigate("/register")}>
-        Register
-      </Button>
+      <AppLink href="/sign-in">Sign In</AppLink>
+      <AppLink href="/register">Register</AppLink>
     </Group>
   );
 }
