@@ -1,5 +1,5 @@
 import Header from "$/frontend/layout/app-shell/header";
-import { AppShellMain, AppShell as MantineShell, Text } from "@mantine/core";
+import { AppShellMain, AppShell as MantineShell } from "@mantine/core";
 import type { PropsWithChildren } from "react";
 
 export default function AppShell({ children }: PropsWithChildren) {
