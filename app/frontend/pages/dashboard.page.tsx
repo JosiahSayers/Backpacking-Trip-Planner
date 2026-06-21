@@ -21,9 +21,9 @@ const DUMMY_TRIPS: Trip[] = [
     endDate: "2026-07-28",
     status: "upcoming",
     packingLists: [
-      { id: "pl1", name: "Main Pack", itemCount: 32, status: "complete" },
+      { id: 1, name: "Main Pack", itemCount: 32, status: "complete" },
       {
-        id: "pl2",
+        id: 2,
         name: "Food & Resupply",
         itemCount: 18,
         status: "in-progress",
@@ -38,7 +38,7 @@ const DUMMY_TRIPS: Trip[] = [
     endDate: "2026-08-12",
     status: "planning",
     packingLists: [
-      { id: "pl3", name: "Weekend Kit", itemCount: 24, status: "not-started" },
+      { id: 3, name: "Weekend Kit", itemCount: 24, status: "not-started" },
     ],
   },
   {
@@ -50,7 +50,7 @@ const DUMMY_TRIPS: Trip[] = [
     status: "planning",
     packingLists: [
       {
-        id: "pl4",
+        id: 4,
         name: "Rain Gear Kit",
         itemCount: 28,
         status: "not-started",
@@ -60,9 +60,9 @@ const DUMMY_TRIPS: Trip[] = [
 ];
 
 const DUMMY_STANDALONE_LISTS: StandaloneList[] = [
-  { id: "sl1", name: "Base Ultralight Kit", itemCount: 12, totalWeightKg: 5.2 },
+  { id: 5, name: "Base Ultralight Kit", itemCount: 12, totalWeightKg: 5.2 },
   {
-    id: "sl2",
+    id: 6,
     name: "Winter Emergency Supplies",
     itemCount: 8,
     totalWeightKg: 2.1,

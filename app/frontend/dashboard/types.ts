@@ -1,12 +1,12 @@
+import type { ClientPackingList } from "$/transformers/packing-list";
+
 export type TripStatus = "planning" | "upcoming" | "completed";
 export type ListStatus = "not-started" | "in-progress" | "complete";
 
-export interface PackingListSummary {
-  id: string;
-  name: string;
+export type PackingListSummary = Pick<ClientPackingList, "id" | "name"> & {
   itemCount: number;
   status: ListStatus;
-}
+};
 
 export interface Trip {
   id: string;
@@ -18,12 +18,10 @@ export interface Trip {
   packingLists: PackingListSummary[];
 }
 
-export interface StandaloneList {
-  id: string;
-  name: string;
+export type StandaloneList = Pick<ClientPackingList, "id" | "name"> & {
   itemCount: number;
   totalWeightKg: number;
-}
+};
 
 export interface GearSummary {
   totalItems: number;
