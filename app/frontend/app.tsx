@@ -1,12 +1,12 @@
 import AppShell from "$/frontend/layout/app-shell";
+import MarketingPage from "$/frontend/pages/marketing.page";
+import NotFoundPage from "$/frontend/pages/not-found.page";
+import RegisterPage from "$/frontend/pages/register.page";
+import SignInPage from "$/frontend/pages/sign-in.page";
 import { trailTheme } from "$/frontend/theme";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
-import { Switch, Route } from "wouter";
 import "@mantine/core/styles.css";
-import SignInPage from "$/frontend/pages/sign-in.page";
-import RegisterPage from "$/frontend/pages/register.page";
-import NotFoundPage from "$/frontend/pages/not-found.page";
-import HomePage from "$/frontend/pages/home.page";
+import { Route, Switch } from "wouter";
 
 export default function App() {
   return (
@@ -15,7 +15,7 @@ export default function App() {
       <MantineProvider theme={trailTheme}>
         <AppShell>
           <Switch>
-            <Route path="/" component={HomePage} />
+            <Route path="/" component={MarketingPage} />
             <Route path="/sign-in" component={SignInPage} />
             <Route path="/register" component={RegisterPage} />
             <Route component={NotFoundPage} />
