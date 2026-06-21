@@ -29,6 +29,9 @@ jobs:
       - name: Seed DB
         run: docker compose -f docker-compose.ci.yml exec -T app bun db:seed
 
+      - name: Start app
+        run: docker compose -f docker-compose.ci.yml exec -T -d app bun dev
+
       - name: Run Playwright tests
         run: bunx playwright test
         env:
