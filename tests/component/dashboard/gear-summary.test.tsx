@@ -3,7 +3,7 @@ import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { beforeEach, expect, it, mock } from "bun:test";
+import { afterAll, beforeEach, expect, it, mock } from "bun:test";
 import { Router } from "wouter";
 
 mock.module("$/frontend/utils/api/gear-inventory", () => ({
@@ -32,6 +32,10 @@ beforeEach(() => {
       </MantineProvider>
     </QueryClientProvider>,
   );
+});
+
+afterAll(() => {
+  mock.restore();
 });
 
 it("renders the total gear item count", () => {
