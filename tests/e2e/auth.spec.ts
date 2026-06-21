@@ -14,7 +14,9 @@ test.describe("Sign in", () => {
   test("shows an error for invalid credentials", async ({ page }) => {
     await page.goto("/sign-in");
     await page.getByLabel("Email").fill("user@test.com");
-    await page.getByRole("textbox", { name: "Password" }).fill("wrong-password");
+    await page
+      .getByRole("textbox", { name: "Password" })
+      .fill("wrong-password");
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page.getByText(/sign in failed|invalid/i)).toBeVisible();
     await expect(page).not.toHaveURL("/dashboard");
@@ -29,8 +31,12 @@ test.describe("Registration", () => {
     await page.goto("/register");
     await page.getByLabel("Name").fill("Playwright Tester");
     await page.getByLabel("Email").fill(email);
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("securepassword123");
-    await page.getByRole("textbox", { name: "Confirm password" }).fill("securepassword123");
+    await page
+      .getByRole("textbox", { name: "Password", exact: true })
+      .fill("securepassword123");
+    await page
+      .getByRole("textbox", { name: "Confirm password" })
+      .fill("securepassword123");
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page).toHaveURL("/dashboard");
   });
@@ -41,8 +47,12 @@ test.describe("Registration", () => {
     await page.goto("/register");
     await page.getByLabel("Name").fill("Playwright Tester");
     await page.getByLabel("Email").fill("mismatch@example.com");
-    await page.getByRole("textbox", { name: "Password", exact: true }).fill("securepassword123");
-    await page.getByRole("textbox", { name: "Confirm password" }).fill("differentpassword");
+    await page
+      .getByRole("textbox", { name: "Password", exact: true })
+      .fill("securepassword123");
+    await page
+      .getByRole("textbox", { name: "Confirm password" })
+      .fill("differentpassword");
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText("Passwords do not match")).toBeVisible();
     await expect(page).not.toHaveURL("/dashboard");

@@ -23,7 +23,7 @@ jobs:
 
       - name: Wait for app to be ready
         run: |
-          timeout 90 bash -c 'until curl -sf http://localhost:3000; do echo "waiting for app..."; sleep 3; done'
+          timeout 90 bash -c 'until curl -sf http://localhost:3000/health; do echo "waiting for app..."; sleep 3; done'
 
       - name: Run DB migrations and seed
         run: |

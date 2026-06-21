@@ -39,7 +39,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-
   const form = useForm<RegisterValues>({
     initialValues: { name: "", email: "", password: "", confirmPassword: "" },
     validate: schemaResolver(registerSchema, { sync: true }),
