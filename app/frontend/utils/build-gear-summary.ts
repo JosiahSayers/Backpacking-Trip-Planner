@@ -1,7 +1,9 @@
 import type { GearSummary } from "$/frontend/dashboard/types";
 import type { ClientGearInventoryItem } from "$/transformers/gear-inventory-item";
 
-export function buildGearSummary(items: ClientGearInventoryItem[]): GearSummary {
+export function buildGearSummary(
+  items: ClientGearInventoryItem[],
+): GearSummary {
   return {
     totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
     totalWeightKg:

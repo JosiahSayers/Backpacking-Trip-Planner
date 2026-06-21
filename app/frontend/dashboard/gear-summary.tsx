@@ -30,7 +30,8 @@ function Stat({
 
 export default function GearSummaryBar() {
   const gearInventory = useGearInventory();
-  const summary = gearInventory.data && buildGearSummary(gearInventory.data.items);
+  const summary =
+    gearInventory.data && buildGearSummary(gearInventory.data.items);
 
   return (
     <Skeleton visible={gearInventory.isPending}>
