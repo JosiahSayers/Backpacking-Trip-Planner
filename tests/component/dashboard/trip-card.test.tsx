@@ -46,7 +46,9 @@ describe("trip details", () => {
   });
 
   it("renders a 'View Trip' button", () => {
-    expect(screen.getByRole("button", { name: "View Trip" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "View Trip" }),
+    ).toBeInTheDocument();
   });
 });
 

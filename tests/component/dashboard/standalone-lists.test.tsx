@@ -34,7 +34,9 @@ describe("when there are no lists", () => {
   });
 
   it("renders a 'New List' button", () => {
-    expect(screen.getByRole("button", { name: "New List" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "New List" }),
+    ).toBeInTheDocument();
   });
 
   it("renders a 'View all lists' link to /packing-lists", () => {
@@ -68,6 +70,8 @@ describe("when there are lists", () => {
   });
 
   it("renders an 'Export PDF' button for each list", () => {
-    expect(screen.getAllByRole("button", { name: "Export PDF" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Export PDF" })).toHaveLength(
+      2,
+    );
   });
 });

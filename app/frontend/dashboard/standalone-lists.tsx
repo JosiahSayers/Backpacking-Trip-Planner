@@ -1,13 +1,6 @@
 import AppLink from "$/frontend/app-link";
 import type { StandaloneList } from "$/frontend/dashboard/types";
-import {
-  Button,
-  Card,
-  Group,
-  SimpleGrid,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Card, Group, SimpleGrid, Text, Title } from "@mantine/core";
 import { FilePdf, ListBullets, Plus } from "@phosphor-icons/react";
 
 interface Props {

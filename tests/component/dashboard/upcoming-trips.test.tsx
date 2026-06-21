@@ -49,7 +49,9 @@ describe("when there are no active trips", () => {
 
 describe("when all trips are completed", () => {
   beforeEach(() =>
-    renderComponent([makeTrip({ id: "1", name: "Old Hike", status: "completed" })]),
+    renderComponent([
+      makeTrip({ id: "1", name: "Old Hike", status: "completed" }),
+    ]),
   );
 
   it("shows the empty state since completed trips are excluded", () => {
@@ -88,7 +90,9 @@ describe("navigation", () => {
   beforeEach(() => renderComponent([]));
 
   it("renders a 'New Trip' button", () => {
-    expect(screen.getByRole("button", { name: "New Trip" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "New Trip" }),
+    ).toBeInTheDocument();
   });
 
   it("renders a 'View all trips' link to /trips", () => {

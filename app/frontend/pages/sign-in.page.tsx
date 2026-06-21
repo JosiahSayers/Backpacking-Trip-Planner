@@ -52,7 +52,7 @@ export default function SignInPage() {
     if (error) {
       setServerError(error.message ?? "Sign in failed. Please try again.");
     } else {
-      navigate(redirect ?? "/dashboard");
+      navigate(redirect || "/dashboard");
     }
   };
 

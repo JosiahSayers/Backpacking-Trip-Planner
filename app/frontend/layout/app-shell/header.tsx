@@ -1,6 +1,13 @@
 import logoSrc from "$/../assets/images/outpost-logo-no-tagline.svg";
 import HeaderLinks from "$/frontend/layout/app-shell/header-links";
-import { AppShellHeader, Burger, Drawer, Group, Image, Stack } from "@mantine/core";
+import {
+  AppShellHeader,
+  Burger,
+  Drawer,
+  Group,
+  Image,
+  Stack,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { Link } from "wouter";
 
@@ -10,7 +17,12 @@ export default function Header() {
   return (
     <>
       <AppShellHeader>
-        <Group px={{ base: "md", sm: "xl" }} justify="space-between" align="center" h="100%">
+        <Group
+          px={{ base: "md", sm: "xl" }}
+          justify="space-between"
+          align="center"
+          h="100%"
+        >
           <Link href="/">
             <Image
               src={logoSrc}

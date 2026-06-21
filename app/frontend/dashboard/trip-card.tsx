@@ -39,9 +39,7 @@ function ListStatusIcon({ status }: { status: ListStatus }) {
       />
     );
   if (status === "in-progress")
-    return (
-      <CircleHalf size={16} color="var(--mantine-color-trail-dust-5)" />
-    );
+    return <CircleHalf size={16} color="var(--mantine-color-trail-dust-5)" />;
   return <Circle size={16} color="var(--mantine-color-stone-gray-4)" />;
 }
 
@@ -75,9 +73,7 @@ export default function TripCard({ trip }: { trip: Trip }) {
 
       <Group gap="xs" c="dimmed" mb="md">
         <CalendarBlank size={14} />
-        <Text size="sm">
-          {formatDateRange(trip.startDate, trip.endDate)}
-        </Text>
+        <Text size="sm">{formatDateRange(trip.startDate, trip.endDate)}</Text>
       </Group>
 
       <Divider mb="md" />
