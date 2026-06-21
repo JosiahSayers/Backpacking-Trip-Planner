@@ -1,6 +1,6 @@
 import { app } from "$/server";
 import { db } from "$/utils/db";
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import request from "supertest";
 import { getAuthCookies } from "../../helpers/auth";
 
@@ -95,6 +95,7 @@ describe("GET /", () => {
           quantity: 1,
           userId: user!.id,
           gearCategoryId: category!.id,
+          grams: 10,
         },
         {
           name: "New item 2",
