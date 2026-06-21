@@ -88,12 +88,14 @@ export default function DashboardPage() {
     );
   }
 
-  const firstName = (session.data?.user.name ?? "there").split(" ")[0];
+  const firstName = (session.data?.user.name ?? "").split(" ")[0];
 
   return (
     <Stack gap="xl" py="xl" px={{ base: "md", md: "xl" }} maw={1200} mx="auto">
       <div>
-        <Title order={1}>Welcome back, {firstName}!</Title>
+        <Title order={1}>
+          Welcome back{firstName ? `, ${firstName}!` : "!"}
+        </Title>
         <Text c="dimmed">Here&apos;s what&apos;s coming up on the trail.</Text>
       </div>
 
