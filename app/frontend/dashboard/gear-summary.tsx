@@ -1,11 +1,8 @@
 import AppLink from "$/frontend/app-link";
-import type { GearSummary } from "$/frontend/dashboard/types";
-import { Group, Paper, Text } from "@mantine/core";
+import { useGearInventory } from "$/frontend/utils/api/gear-inventory";
+import { buildGearSummary } from "$/frontend/utils/build-gear-summary";
+import { Group, Paper, Skeleton, Text } from "@mantine/core";
 import { Backpack, Scales, Tag } from "@phosphor-icons/react";
-
-interface Props {
-  summary: GearSummary;
-}
 
 function Stat({
   icon,
@@ -31,29 +28,34 @@ function Stat({
   );
 }
 
-export default function GearSummaryBar({ summary }: Props) {
+export default function GearSummaryBar() {
+  const gearInventory = useGearInventory();
+  const summary = gearInventory.data && buildGearSummary(gearInventory.data.items);
+
   return (
-    <Paper p="lg" withBorder>
-      <Group justify="space-between" align="center" wrap="wrap" gap="md">
-        <Group gap="xl" wrap="wrap">
-          <Stat
-            icon={<Backpack size={22} />}
-            label="Gear Items"
-            value={summary.totalItems}
-          />
-          <Stat
-            icon={<Scales size={22} />}
-            label="Total Weight"
-            value={`${summary.totalWeightKg} kg`}
-          />
-          <Stat
-            icon={<Tag size={22} />}
-            label="Categories"
-            value={summary.categoryCount}
-          />
+    <Skeleton visible={gearInventory.isPending}>
+      <Paper p="lg" withBorder>
+        <Group justify="space-between" align="center" wrap="wrap" gap="md">
+          <Group gap="xl" wrap="wrap">
+            <Stat
+              icon={<Backpack size={22} />}
+              label="Gear Items"
+              value={summary?.totalItems ?? 0}
+            />
+            <Stat
+              icon={<Scales size={22} />}
+              label="Total Weight"
+              value={`${summary?.totalWeightKg ?? 0} kg`}
+            />
+            <Stat
+              icon={<Tag size={22} />}
+              label="Categories"
+              value={summary?.categoryCount ?? 0}
+            />
+          </Group>
+          <AppLink href="/gear">Manage Gear Inventory →</AppLink>
         </Group>
-        <AppLink href="/gear">Manage Gear Inventory →</AppLink>
-      </Group>
-    </Paper>
+      </Paper>
+    </Skeleton>
   );
 }

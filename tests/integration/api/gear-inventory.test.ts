@@ -163,6 +163,7 @@ describe("DELETE /:id", () => {
         gearCategoryId: category!.id,
       },
     });
+    user2ItemId = user2Item.id;
   });
 
   it("returns a 404 when the id does not belong to the user", async (done) => {
@@ -176,6 +177,6 @@ describe("DELETE /:id", () => {
     request(app)
       .delete(`/api/gear-inventory/${user2ItemId!}`)
       .set("Cookie", user2AuthCookies)
-      .expect(404, done);
+      .expect(200, done);
   });
 });

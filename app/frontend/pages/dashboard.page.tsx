@@ -1,10 +1,6 @@
 import GearSummaryBar from "$/frontend/dashboard/gear-summary";
 import StandaloneLists from "$/frontend/dashboard/standalone-lists";
-import type {
-  GearSummary,
-  StandaloneList,
-  Trip,
-} from "$/frontend/dashboard/types";
+import type { StandaloneList, Trip } from "$/frontend/dashboard/types";
 import UpcomingTrips from "$/frontend/dashboard/upcoming-trips";
 import { useAuthenticatedGuard } from "$/frontend/utils/guards/authenticated.guard";
 import { Center, Loader, Stack, Text, Title } from "@mantine/core";
@@ -69,12 +65,6 @@ const DUMMY_STANDALONE_LISTS: StandaloneList[] = [
   },
 ];
 
-const DUMMY_GEAR_SUMMARY: GearSummary = {
-  totalItems: 47,
-  totalWeightKg: 8.3,
-  categoryCount: 6,
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -103,7 +93,7 @@ export default function DashboardPage() {
 
       <StandaloneLists lists={DUMMY_STANDALONE_LISTS} />
 
-      <GearSummaryBar summary={DUMMY_GEAR_SUMMARY} />
+      <GearSummaryBar />
     </Stack>
   );
 }
