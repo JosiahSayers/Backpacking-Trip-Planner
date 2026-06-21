@@ -61,6 +61,8 @@ API hooks live in `app/frontend/utils/api/`. Each hook uses `useQuery`/`useMutat
 
 **Use `SKIP_DB_SETUP=1` for component and unit tests** — they don't need the database and the reset adds significant time.
 
-### Mocking modules in component tests
+### Mocking in component tests
 
-Follow the pattern in `tests/component/utils/guards/authenticated.test.tsx`: call `mock.module("$/path/to/module", ...)` before importing the component under test. This lets you control what hooks return without needing a real backend. Components that use React Query hooks still need a `QueryClientProvider` wrapper in the render.
+**Do not use `mock.module()`** — Bun has a bug where module mocks persist for the entire test run and `mock.restore()` does not restore them. This causes tests to bleed into each other in unpredictable ways.
+
+Instead, mock at the hook/function level using `mock()` from `bun:test`, or structure components so their dependencies can be controlled via props or context.
