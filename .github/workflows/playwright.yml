@@ -26,10 +26,6 @@ jobs:
           docker compose -f docker-compose.ci.yml exec -T app bunx --bun prisma generate
           docker compose -f docker-compose.ci.yml exec -T app bunx --bun prisma migrate deploy
 
-      - name: Wait for app to be ready
-        run: |
-          timeout 90 bash -c 'until curl -sf http://localhost:3000/ready; do echo "waiting for app..."; sleep 3; done'
-
       - name: Seed DB
         run: docker compose -f docker-compose.ci.yml exec -T app bun db:seed
 
