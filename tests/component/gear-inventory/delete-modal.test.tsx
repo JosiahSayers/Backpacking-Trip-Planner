@@ -1,9 +1,16 @@
 import DeleteModal from "$/frontend/gear-inventory/delete-modal";
 import { transformers } from "$/transformers";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, it, mock } from "bun:test";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { make } from "../../helpers/test-data/make";
 
 const onClose = mock(() => {});
@@ -13,13 +20,23 @@ const item = transformers.gearInventoryItem({
   category: make("GearCategory"),
 });
 
+function renderModal(fetchResponse: Response) {
+  global.fetch = mock(() =>
+    Promise.resolve(fetchResponse),
+  ) as unknown as typeof fetch;
+  const queryClient = new QueryClient();
+  render(
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider>
+        <DeleteModal opened={true} onClose={onClose} item={item} />
+      </MantineProvider>
+    </QueryClientProvider>,
+  );
+}
+
 beforeEach(() => {
   onClose.mockReset();
-  render(
-    <MantineProvider>
-      <DeleteModal opened={true} onClose={onClose} item={item} />
-    </MantineProvider>,
-  );
+  renderModal(new Response(null, { status: 204 }));
 });
 
 it("renders the Delete item? title", () => {
@@ -40,7 +57,26 @@ it("calls onClose when Cancel is clicked", () => {
   expect(onClose).toHaveBeenCalledTimes(1);
 });
 
-it("calls onClose when Delete is clicked", () => {
+it("calls onClose after successful delete", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Delete" }));
-  expect(onClose).toHaveBeenCalledTimes(1);
+  await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+});
+
+describe("when delete fails", () => {
+  beforeEach(() => {
+    cleanup();
+    onClose.mockReset();
+    renderModal(
+      new Response(null, { status: 500, statusText: "Internal Server Error" }),
+    );
+  });
+
+  it("shows an error message", async () => {
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() =>
+      expect(
+        screen.getByText("Something went wrong. Please try again."),
+      ).toBeInTheDocument(),
+    );
+  });
 });
