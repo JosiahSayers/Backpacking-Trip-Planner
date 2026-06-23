@@ -22,7 +22,7 @@ export default function StatBar({ items }: Props) {
             Items
           </Text>
           <Text fw={700} lh={1.2}>
-            {totalItems}
+            {totalItems} ({items.length} unique)
           </Text>
         </div>
       </Group>

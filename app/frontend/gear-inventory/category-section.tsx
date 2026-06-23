@@ -18,7 +18,7 @@ export default function CategorySection({
   formatWeight,
 }: Props) {
   return (
-    <>
+    <div>
       <Group gap="xs" mb="xs" align="center">
         <Text
           size="xs"
@@ -87,6 +87,6 @@ export default function CategorySection({
           ))}
         </Table.Tbody>
       </Table>
-    </>
+    </div>
   );
 }

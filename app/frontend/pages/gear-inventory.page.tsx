@@ -3,6 +3,7 @@ import DeleteModal from "$/frontend/gear-inventory/delete-modal";
 import EditDrawer from "$/frontend/gear-inventory/edit-drawer";
 import Header from "$/frontend/gear-inventory/header";
 import { useGearInventory } from "$/frontend/utils/api/gear-inventory";
+import { useAuthenticatedGuard } from "$/frontend/utils/guards/authenticated.guard";
 import type { ClientGearInventoryItem } from "$/transformers/gear-inventory-item";
 import { Stack } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -21,6 +22,8 @@ function formatWeight(grams: number | null): string {
 }
 
 export default function GearInventoryPage() {
+  useAuthenticatedGuard();
+  // TODO: Loading and error states
   const { data, isLoading, isError } = useGearInventory();
   const [drawerOpen, { open: openDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -77,6 +80,7 @@ export default function GearInventoryPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             formatWeight={formatWeight}
+            key={name}
           />
         ))}
       </Stack>

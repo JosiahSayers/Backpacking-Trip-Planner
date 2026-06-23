@@ -1,6 +1,5 @@
 import AppShell from "$/frontend/layout/app-shell";
 import DashboardPage from "$/frontend/pages/dashboard.page";
-import GearInventoryMockupsPage from "$/frontend/pages/gear-inventory-mockups.page";
 import GearInventoryPage from "$/frontend/pages/gear-inventory.page";
 import MarketingPage from "$/frontend/pages/marketing.page";
 import NotFoundPage from "$/frontend/pages/not-found.page";
@@ -24,10 +23,6 @@ export default function App() {
             <Switch>
               <Route path="/" component={MarketingPage} />
               <Route path="/dashboard" component={DashboardPage} />
-              <Route
-                path="/gear-inventory-mockups"
-                component={GearInventoryMockupsPage}
-              />
               <Route path="/gear-inventory" component={GearInventoryPage} />
               <Route path="/sign-in" component={SignInPage} />
               <Route path="/register" component={RegisterPage} />
