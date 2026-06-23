@@ -31,6 +31,23 @@ export function useCreateGearInventoryItem() {
   });
 }
 
+export function useUpdateGearInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      data: z.input<typeof createGearInventoryItemValidator> & { id: number },
+    ) =>
+      apiClient<ClientGearInventoryItem>(`/api/gear-inventory/${data.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, id: undefined }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: gearInventoryKeys.all });
+    },
+  });
+}
+
 export function useDeleteGearInventoryItem() {
   const queryClient = useQueryClient();
   return useMutation({

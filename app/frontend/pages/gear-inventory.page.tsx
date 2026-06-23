@@ -68,6 +68,16 @@ export default function GearInventoryPage() {
     openDelete();
   };
 
+  const handleClose = (item: "drawer" | "modal") => {
+    if (item === "drawer") {
+      setEditItem(null);
+      closeDrawer();
+    } else if (item === "modal") {
+      setDeleteItem(null);
+      closeDelete();
+    }
+  };
+
   return (
     <Stack gap="xl" py="xl" px={{ base: "md", md: "xl" }} maw={1400} mx="auto">
       <Header items={data?.items ?? []} onAdd={handleAdd} />
@@ -85,10 +95,14 @@ export default function GearInventoryPage() {
         ))}
       </Stack>
 
-      <EditDrawer opened={drawerOpen} onClose={closeDrawer} item={editItem} />
+      <EditDrawer
+        opened={drawerOpen}
+        onClose={() => handleClose("drawer")}
+        item={editItem}
+      />
       <DeleteModal
         opened={deleteOpen}
-        onClose={closeDelete}
+        onClose={() => handleClose("modal")}
         item={deleteItem}
       />
     </Stack>

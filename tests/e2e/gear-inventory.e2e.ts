@@ -200,6 +200,27 @@ test.describe("Gear Inventory Page", () => {
       await expect(page.getByText(categoryName)).toBeVisible();
       await expect(page.getByText(itemName)).toBeVisible();
     });
+
+    test("shows an error and keeps the drawer open when the API call fails", async ({
+      page,
+    }) => {
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill("Should not save");
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+
+      await page.route("**/api/gear-inventory", (route) =>
+        route.fulfill({ status: 500 }),
+      );
+
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(
+        page.getByText("Something went wrong. Please try again."),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Add item" }),
+      ).toBeVisible();
+    });
   });
 
   test.describe("editing an existing gear inventory item", () => {
@@ -221,6 +242,73 @@ test.describe("Gear Inventory Page", () => {
       await page.getByRole("button", { name: "Cancel" }).click();
       await expect(page.getByLabel("Item name")).not.toBeVisible();
       await expect(page.getByText("Durston X-Mid 1")).toBeVisible();
+    });
+
+    test("successfully saves changes to an item's name", async ({ page }) => {
+      const id = Date.now();
+      const originalName = `Edit Name Test ${id}`;
+      const newName = `Renamed Item ${id}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(originalName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(originalName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${originalName}` }).click();
+      await page.getByLabel("Item name").fill(newName);
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await expect(page.getByText(newName)).toBeVisible();
+      await expect(page.getByText(originalName)).not.toBeVisible();
+    });
+
+    test("successfully changes an item's category, moving it to the correct section", async ({
+      page,
+    }) => {
+      const id = Date.now();
+      const itemName = `Shelter Test ${id}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${itemName}` }).click();
+      await page.getByLabel("Category").fill("Back");
+      await page.getByRole("option", { name: "Backpacks" }).click();
+      await expect(page.getByLabel("Category")).toHaveValue("Backpacks");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await expect(
+        page.getByRole("row").filter({ hasText: itemName }),
+      ).toBeVisible();
+    });
+
+    test("shows an error and keeps the drawer open when the API call fails", async ({
+      page,
+    }) => {
+      const itemName = `Edit Error Test ${Date.now()}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${itemName}` }).click();
+      await page.getByLabel("Item name").fill("Should not save");
+
+      await page.route("**/api/gear-inventory/*", (route) =>
+        route.fulfill({ status: 500 }),
+      );
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(
+        page.getByText("Something went wrong. Please try again."),
+      ).toBeVisible();
+      await expect(page.getByText("Edit item")).toBeVisible();
     });
   });
 
@@ -300,7 +388,8 @@ test.describe("Gear Inventory Page", () => {
       await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByText("Edit item")).toBeVisible();
       await page.getByRole("button", { name: "Cancel" }).click();
-      await page.getByRole("button", { name: "Add Item" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await page.getByRole("button", { name: "Add Item", exact: true }).click();
       await expect(
         page.getByRole("heading", { name: "Add item" }),
       ).toBeVisible();
