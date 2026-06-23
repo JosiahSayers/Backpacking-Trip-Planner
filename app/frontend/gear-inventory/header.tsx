@@ -14,9 +14,7 @@ export default function Header({ items, onAdd }: Props) {
       <Group justify="space-between" align="flex-start">
         <div>
           <Title order={1}>Gear Inventory</Title>
-          <Text c="dimmed">
-            Your complete kit, organised and ready to pack.
-          </Text>
+          <Text c="dimmed">Track and manage everything in your kit.</Text>
         </div>
         <Button leftSection={<PlusIcon size={16} />} onClick={onAdd}>
           Add Item
