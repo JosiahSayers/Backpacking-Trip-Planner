@@ -2,7 +2,7 @@ import CategorySection from "$/frontend/gear-inventory/category-section";
 import { transformers } from "$/transformers";
 import { MantineProvider } from "@mantine/core";
 import "@testing-library/jest-dom";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, expect, it, mock } from "bun:test";
 import { make } from "../../helpers/test-data/make";
 
@@ -54,15 +54,11 @@ it("calls formatWeight for each item", () => {
 });
 
 it("calls onEdit with the correct item when the edit button is clicked", () => {
-  const row = screen.getByText("Tent").closest("tr")!;
-  const [editButton] = within(row).getAllByRole("button");
-  fireEvent.click(editButton!);
+  fireEvent.click(screen.getByRole("button", { name: "Edit Tent" }));
   expect(onEdit).toHaveBeenCalledWith(item1);
 });
 
 it("calls onDelete with the correct item when the delete button is clicked", () => {
-  const row = screen.getByText("Tent").closest("tr")!;
-  const [, deleteButton] = within(row).getAllByRole("button");
-  fireEvent.click(deleteButton!);
+  fireEvent.click(screen.getByRole("button", { name: "Delete Tent" }));
   expect(onDelete).toHaveBeenCalledWith(item1);
 });

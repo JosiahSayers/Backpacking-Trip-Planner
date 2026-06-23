@@ -11,14 +11,27 @@ afterAll(() => {
   fetchSpy.mockRestore();
 });
 
-it("returns parsed json on a successful response", async () => {
+it("returns parsed json on a successful json response", async () => {
   fetchSpy.mockImplementation((() =>
     Promise.resolve(
-      new Response(JSON.stringify({ success: true }), { status: 200 }),
+      new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
     )) as unknown as typeof fetch);
 
   const result = await apiClient<{ success: boolean }>("/api/test");
   expect(result).toEqual({ success: true });
+});
+
+it("returns text on a successful non-json response", async () => {
+  fetchSpy.mockImplementation((() =>
+    Promise.resolve(
+      new Response("ok", { status: 200 }),
+    )) as unknown as typeof fetch);
+
+  const result = await apiClient<string>("/api/test");
+  expect(result).toBe("ok");
 });
 
 it("throws with the status code and status text on a non-ok response", async () => {

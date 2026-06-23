@@ -206,12 +206,7 @@ test.describe("Gear Inventory Page", () => {
     test("clicking the edit icon opens up the drawer with the form pre-populated and 'Edit item' title", async ({
       page,
     }) => {
-      await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .first()
-        .click();
+      await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByText("Edit item")).toBeVisible();
       await expect(page.getByLabel("Item name")).toHaveValue("Durston X-Mid 1");
       await expect(page.getByLabel("Category")).toHaveValue("Tents");
@@ -221,12 +216,7 @@ test.describe("Gear Inventory Page", () => {
     test("clicking Cancel closes the drawer without making any changes", async ({
       page,
     }) => {
-      await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .first()
-        .click();
+      await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByText("Edit item")).toBeVisible();
       await page.getByRole("button", { name: "Cancel" }).click();
       await expect(page.getByLabel("Item name")).not.toBeVisible();
@@ -239,10 +229,7 @@ test.describe("Gear Inventory Page", () => {
       page,
     }) => {
       await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .last()
+        .getByRole("button", { name: "Delete Durston X-Mid 1" })
         .click();
       await expect(page.getByText("Delete item?")).toBeVisible();
       await expect(page.getByRole("dialog")).toContainText("Durston X-Mid 1");
@@ -252,15 +239,57 @@ test.describe("Gear Inventory Page", () => {
       page,
     }) => {
       await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .last()
+        .getByRole("button", { name: "Delete Durston X-Mid 1" })
         .click();
       await expect(page.getByText("Delete item?")).toBeVisible();
       await page.getByRole("button", { name: "Cancel" }).click();
       await expect(page.getByText("Delete item?")).not.toBeVisible();
       await expect(page.getByText("Durston X-Mid 1")).toBeVisible();
+    });
+
+    test("deleting an item removes it from the gear-inventory list when the API call is successful", async ({
+      page,
+    }) => {
+      const itemName = `Delete Test Item ${Date.now()}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Delete ${itemName}` }).click();
+      await expect(page.getByText("Delete item?")).toBeVisible();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+
+      await expect(page.getByText("Delete item?")).not.toBeVisible();
+      await expect(page.getByText(itemName)).not.toBeVisible();
+    });
+
+    test("an error message is shown when the API call fails", async ({
+      page,
+    }) => {
+      const itemName = `Delete Error Test Item ${Date.now()}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.route("**/api/gear-inventory/*", (route) =>
+        route.fulfill({ status: 500 }),
+      );
+
+      await page.getByRole("button", { name: `Delete ${itemName}` }).click();
+      await expect(page.getByText("Delete item?")).toBeVisible();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+
+      await expect(
+        page.getByText("Something went wrong. Please try again."),
+      ).toBeVisible();
+      await expect(page.getByText("Delete item?")).toBeVisible();
+      await expect(page.getByRole("main").getByText(itemName)).toBeVisible();
     });
   });
 
@@ -268,12 +297,7 @@ test.describe("Gear Inventory Page", () => {
     test("opening the drawer to edit an item then clicking Add Item shows an empty form", async ({
       page,
     }) => {
-      await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .first()
-        .click();
+      await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByText("Edit item")).toBeVisible();
       await page.getByRole("button", { name: "Cancel" }).click();
       await page.getByRole("button", { name: "Add Item" }).click();
@@ -287,20 +311,10 @@ test.describe("Gear Inventory Page", () => {
     test("editing item A then editing item B shows item B's data, not item A's", async ({
       page,
     }) => {
-      await page
-        .getByRole("row")
-        .filter({ hasText: "Durston X-Mid 1" })
-        .getByRole("button")
-        .first()
-        .click();
+      await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByLabel("Item name")).toHaveValue("Durston X-Mid 1");
       await page.getByRole("button", { name: "Cancel" }).click();
-      await page
-        .getByRole("row")
-        .filter({ hasText: "Gergory Zulu 45" })
-        .getByRole("button")
-        .first()
-        .click();
+      await page.getByRole("button", { name: "Edit Gergory Zulu 45" }).click();
       await expect(page.getByLabel("Item name")).toHaveValue("Gergory Zulu 45");
       await expect(page.getByLabel("Category")).toHaveValue("Backpacks");
     });

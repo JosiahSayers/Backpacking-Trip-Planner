@@ -1,5 +1,5 @@
-import type { createGearInventoryItemValidator } from "$/validation/gear-inventory";
 import type { ClientGearInventoryItem } from "$/transformers/gear-inventory-item";
+import type { createGearInventoryItemValidator } from "$/validation/gear-inventory";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { z } from "zod";
 import { apiClient } from "./client";
@@ -24,6 +24,19 @@ export function useCreateGearInventoryItem() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: gearInventoryKeys.all });
+    },
+  });
+}
+
+export function useDeleteGearInventoryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiClient(`/api/gear-inventory/${id}`, {
+        method: "DELETE",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gearInventoryKeys.all });

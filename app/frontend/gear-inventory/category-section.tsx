@@ -69,6 +69,7 @@ export default function CategorySection({
                     variant="subtle"
                     color="gray"
                     size="sm"
+                    aria-label={`Edit ${item.name}`}
                     onClick={() => onEdit(item)}
                   >
                     <PencilSimple size={14} />
@@ -77,6 +78,7 @@ export default function CategorySection({
                     variant="subtle"
                     color="red"
                     size="sm"
+                    aria-label={`Delete ${item.name}`}
                     onClick={() => onDelete(item)}
                   >
                     <Trash size={14} />
