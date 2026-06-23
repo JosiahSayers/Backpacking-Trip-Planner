@@ -98,7 +98,7 @@ export default function EditDrawer({ opened, onClose, item }: Props) {
       position="right"
       size="md"
     >
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <Stack gap="md" pt="xs">
           <TextInput
             label="Item name"
@@ -109,7 +109,9 @@ export default function EditDrawer({ opened, onClose, item }: Props) {
           <Combobox
             store={combobox}
             onOptionSubmit={(val) => {
-              const category = categoryOptions.find((c) => String(c.id) === val);
+              const category = categoryOptions.find(
+                (c) => String(c.id) === val,
+              );
               if (category) {
                 form.setFieldValue("categoryName", category.name);
                 form.setFieldValue("categoryId", category.id);
