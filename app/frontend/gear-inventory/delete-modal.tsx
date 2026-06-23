@@ -1,3 +1,4 @@
+import { useDeleteGearInventoryItem } from "$/frontend/utils/api/gear-inventory";
 import type { ClientGearInventoryItem } from "$/transformers/gear-inventory-item";
 import { Button, Group, Modal, Text } from "@mantine/core";
 
@@ -8,7 +9,13 @@ interface Props {
 }
 
 export default function DeleteModal({ opened, onClose, item }: Props) {
-  // TODO: Wire up delete API call
+  const { isPending, mutateAsync } = useDeleteGearInventoryItem();
+
+  const handleDelete = async () => {
+    if (!item) return;
+    await mutateAsync(item.id);
+    onClose();
+  };
 
   return (
     <Modal
@@ -23,10 +30,10 @@ export default function DeleteModal({ opened, onClose, item }: Props) {
         can&apos;t be undone.
       </Text>
       <Group justify="flex-end">
-        <Button variant="subtle" onClick={onClose}>
+        <Button disabled={isPending} variant="subtle" onClick={onClose}>
           Cancel
         </Button>
-        <Button color="red" onClick={onClose}>
+        <Button loading={isPending} color="red" onClick={handleDelete}>
           Delete
         </Button>
       </Group>

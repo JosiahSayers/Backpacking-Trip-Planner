@@ -4,5 +4,11 @@ export async function apiClient<T>(
 ): Promise<T> {
   const res = await fetch(url, options);
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-  return res.json() as Promise<T>;
+  if (
+    res.headers.get("Content-Type")?.toLowerCase().includes("application/json")
+  ) {
+    return res.json() as Promise<T>;
+  } else {
+    return res.text() as Promise<T>;
+  }
 }
