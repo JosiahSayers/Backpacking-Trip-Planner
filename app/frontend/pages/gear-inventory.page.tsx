@@ -40,16 +40,24 @@ export default function GearInventoryPage() {
       return {};
     }
 
-    return data.items.reduce<Record<string, Array<ClientGearInventoryItem>>>(
-      (acc, item) => {
-        if (!acc[item.category.name]) {
-          acc[item.category.name] = [];
-        }
+    const grouped = data.items.reduce<
+      Record<string, Array<ClientGearInventoryItem>>
+    >((acc, item) => {
+      if (!acc[item.category.name]) {
+        acc[item.category.name] = [];
+      }
 
-        acc[item.category.name]!.push(item);
-        return acc;
-      },
-      {},
+      acc[item.category.name]!.push(item);
+      return acc;
+    }, {});
+
+    return Object.fromEntries(
+      Object.entries(grouped)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([category, items]) => [
+          category,
+          [...items].sort((a, b) => a.name.localeCompare(b.name)),
+        ]),
     );
   }, [data?.items]);
 
