@@ -1,8 +1,8 @@
+import { userCanAccessGearInventoryItem } from "$/middleware/authorization/gear-inventory-item";
 import { requireValidSession } from "$/middleware/require-valid-session";
 import { transformers } from "$/transformers";
 import { db } from "$/utils/db";
 import { createGearInventoryItemValidator } from "$/validation/gear-inventory";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { Router } from "express";
 import validate from "express-zod-safe";
 import type { GearCategory } from "../../../generated/prisma/client";
@@ -25,7 +25,10 @@ gearInventoryRouter.post(
       });
     } else {
       const existing = await db.gearCategory.findUnique({
-        where: { id: req.body.existingCategoryId },
+        where: {
+          id: req.body.existingCategoryId,
+          OR: [{ userId: req.session!.user.id }, { public: true }],
+        },
       });
 
       if (!existing) {
@@ -54,6 +57,25 @@ gearInventoryRouter.post(
   },
 );
 
+gearInventoryRouter.put(
+  "/:id",
+  validate({ body: createGearInventoryItemValidator }),
+  userCanAccessGearInventoryItem,
+  async (req, res) => {
+    const existingItem = await db.gearInventoryItem.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { category: true },
+    });
+
+    // if category is changing
+    //   if new category, create new category
+    //   if existing category, find it and make sure the user can access it
+    //   delete old category if no other items are associated with it
+
+    // update other fields when passed.
+  },
+);
+
 gearInventoryRouter.get("/", async (req, res) => {
   const items = await db.gearInventoryItem.findMany({
     where: {
@@ -66,18 +88,13 @@ gearInventoryRouter.get("/", async (req, res) => {
   return res.json({ items: items.map(transformers.gearInventoryItem) });
 });
 
-gearInventoryRouter.delete("/:id", async (req, res) => {
-  try {
+gearInventoryRouter.delete(
+  "/:id",
+  userCanAccessGearInventoryItem,
+  async (req, res) => {
     await db.gearInventoryItem.delete({
       where: { id: Number(req.params.id), userId: req.session!.user.id },
     });
     return res.sendStatus(200);
-  } catch (e) {
-    if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-      return res.sendStatus(404);
-    } else {
-      req.logger.error("Error deleting gear inventory item", e);
-      return res.sendStatus(500);
-    }
-  }
-});
+  },
+);

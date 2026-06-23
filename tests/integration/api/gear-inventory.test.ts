@@ -78,6 +78,34 @@ describe("POST /", () => {
       }
     `);
   });
+
+  it("returns a validation error when the existing category is not accessible to the user", async () => {
+    const user2 = await db.user.findUnique({
+      where: { email: "user2@test.com" },
+    });
+    const nonPublicCategory = await db.gearCategory.create({
+      data: {
+        name: "My private category",
+        userId: user2!.id,
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/gear-inventory")
+      .send({
+        name: "Snazzy Test Backpack",
+        quantity: 1,
+        existingCategoryId: nonPublicCategory.id,
+      })
+      .set("Cookie", authCookies)
+      .expect("Content-Type", /json/)
+      .expect(404);
+    expect(response.body).toMatchInlineSnapshot(`
+      {
+        "error": "Unable to find category",
+      }
+    `);
+  });
 });
 
 describe("GET /", () => {
@@ -166,9 +194,16 @@ describe("DELETE /:id", () => {
     user2ItemId = user2Item.id;
   });
 
-  it("returns a 404 when the id does not belong to the user", async (done) => {
+  it("returns a 403 when the id does not belong to the user", async (done) => {
     request(app)
       .delete(`/api/gear-inventory/${user2ItemId!}`)
+      .set("Cookie", authCookies)
+      .expect(403, done);
+  });
+
+  it("returns a 404 when the id cannot be found", async (done) => {
+    request(app)
+      .delete(`/api/gear-inventory/-1`)
       .set("Cookie", authCookies)
       .expect(404, done);
   });
