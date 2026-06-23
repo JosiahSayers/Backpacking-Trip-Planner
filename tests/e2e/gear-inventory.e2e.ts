@@ -200,6 +200,27 @@ test.describe("Gear Inventory Page", () => {
       await expect(page.getByText(categoryName)).toBeVisible();
       await expect(page.getByText(itemName)).toBeVisible();
     });
+
+    test("shows an error and keeps the drawer open when the API call fails", async ({
+      page,
+    }) => {
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill("Should not save");
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+
+      await page.route("**/api/gear-inventory", (route) =>
+        route.fulfill({ status: 500 }),
+      );
+
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(
+        page.getByText("Something went wrong. Please try again."),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Add item" }),
+      ).toBeVisible();
+    });
   });
 
   test.describe("editing an existing gear inventory item", () => {
@@ -221,6 +242,73 @@ test.describe("Gear Inventory Page", () => {
       await page.getByRole("button", { name: "Cancel" }).click();
       await expect(page.getByLabel("Item name")).not.toBeVisible();
       await expect(page.getByText("Durston X-Mid 1")).toBeVisible();
+    });
+
+    test("successfully saves changes to an item's name", async ({ page }) => {
+      const id = Date.now();
+      const originalName = `Edit Name Test ${id}`;
+      const newName = `Renamed Item ${id}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(originalName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(originalName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${originalName}` }).click();
+      await page.getByLabel("Item name").fill(newName);
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await expect(page.getByText(newName)).toBeVisible();
+      await expect(page.getByText(originalName)).not.toBeVisible();
+    });
+
+    test("successfully changes an item's category, moving it to the correct section", async ({
+      page,
+    }) => {
+      const id = Date.now();
+      const itemName = `Shelter Test ${id}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${itemName}` }).click();
+      await page.getByLabel("Category").fill("Back");
+      await page.getByRole("option", { name: "Backpacks" }).click();
+      await expect(page.getByLabel("Category")).toHaveValue("Backpacks");
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await expect(
+        page.getByRole("row").filter({ hasText: itemName }),
+      ).toBeVisible();
+    });
+
+    test("shows an error and keeps the drawer open when the API call fails", async ({
+      page,
+    }) => {
+      const itemName = `Edit Error Test ${Date.now()}`;
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill("Ten");
+      await page.getByRole("option", { name: "Tents" }).click();
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(itemName)).toBeVisible();
+
+      await page.getByRole("button", { name: `Edit ${itemName}` }).click();
+      await page.getByLabel("Item name").fill("Should not save");
+
+      await page.route("**/api/gear-inventory/*", (route) =>
+        route.fulfill({ status: 500 }),
+      );
+
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(
+        page.getByText("Something went wrong. Please try again."),
+      ).toBeVisible();
+      await expect(page.getByText("Edit item")).toBeVisible();
     });
   });
 
@@ -300,7 +388,8 @@ test.describe("Gear Inventory Page", () => {
       await page.getByRole("button", { name: "Edit Durston X-Mid 1" }).click();
       await expect(page.getByText("Edit item")).toBeVisible();
       await page.getByRole("button", { name: "Cancel" }).click();
-      await page.getByRole("button", { name: "Add Item" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await page.getByRole("button", { name: "Add Item", exact: true }).click();
       await expect(
         page.getByRole("heading", { name: "Add item" }),
       ).toBeVisible();
@@ -317,6 +406,155 @@ test.describe("Gear Inventory Page", () => {
       await page.getByRole("button", { name: "Edit Gergory Zulu 45" }).click();
       await expect(page.getByLabel("Item name")).toHaveValue("Gergory Zulu 45");
       await expect(page.getByLabel("Category")).toHaveValue("Backpacks");
+    });
+  });
+
+  test.describe("sorting", () => {
+    test("categories remain sorted alphabetically when an item's category is changed", async ({
+      page,
+    }) => {
+      const id = Date.now();
+      const itemName = `Sort Test ${id}`;
+      const firstCategory = `Zzz Sort ${id}`;
+      const secondCategory = `Aaa Sort ${id}`;
+
+      // Create item under a category that sorts last
+      await page.getByRole("button", { name: "Add Item" }).click();
+      await page.getByLabel("Item name").fill(itemName);
+      await page.getByLabel("Category").fill(firstCategory);
+      await page.getByRole("button", { name: "Add item", exact: true }).click();
+      await expect(page.getByText(firstCategory)).toBeVisible();
+
+      // Verify "Water Filters" appears above the new last-sorted category
+      const waterFiltersPos = await page
+        .getByText("Water Filters")
+        .boundingBox();
+      const firstCategoryPos = await page
+        .getByText(firstCategory)
+        .boundingBox();
+      expect(waterFiltersPos!.y).toBeLessThan(firstCategoryPos!.y);
+
+      // Change the item's category to one that sorts first
+      await page.getByRole("button", { name: `Edit ${itemName}` }).click();
+      await page.getByLabel("Category").fill(secondCategory);
+      await page.getByRole("button", { name: "Save changes" }).click();
+      await expect(page.getByLabel("Item name")).not.toBeVisible();
+      await expect(page.getByText(secondCategory)).toBeVisible();
+
+      // Verify the new category now appears before "Backpacks"
+      const secondCategoryPos = await page
+        .getByText(secondCategory)
+        .boundingBox();
+      const backpacksPos = await page.getByText("Backpacks").boundingBox();
+      expect(secondCategoryPos!.y).toBeLessThan(backpacksPos!.y);
+    });
+
+    test.describe("item sorting within categories", () => {
+      test("items within a category are displayed in alphabetical order regardless of creation order", async ({
+        page,
+      }) => {
+        const id = Date.now();
+        const category = `Sort Items Test ${id}`;
+        const firstItem = `Aaa Item ${id}`;
+        const lastItem = `Zzz Item ${id}`;
+
+        // Create the last-sorted item first
+        await page
+          .getByRole("button", { name: "Add Item", exact: true })
+          .click();
+        await page.getByLabel("Item name").fill(lastItem);
+        await page.getByLabel("Category").fill(category);
+        await page
+          .getByRole("button", { name: "Add item", exact: true })
+          .click();
+        await expect(page.getByLabel("Item name")).not.toBeVisible();
+        await expect(page.getByText(lastItem)).toBeVisible();
+
+        // Create the first-sorted item second
+        await page
+          .getByRole("button", { name: "Add Item", exact: true })
+          .click();
+        await page.getByLabel("Item name").fill(firstItem);
+        await page.getByLabel("Category").fill(category);
+        await page.getByRole("option", { name: category }).click();
+        await page
+          .getByRole("button", { name: "Add item", exact: true })
+          .click();
+        await expect(page.getByText(firstItem)).toBeVisible();
+
+        // Despite creation order, firstItem should appear above lastItem
+        const firstItemPos = await page
+          .getByRole("row")
+          .filter({ hasText: firstItem })
+          .boundingBox();
+        const lastItemPos = await page
+          .getByRole("row")
+          .filter({ hasText: lastItem })
+          .boundingBox();
+        expect(firstItemPos!.y).toBeLessThan(lastItemPos!.y);
+      });
+
+      test("items within a category are re-sorted alphabetically when an item's name changes", async ({
+        page,
+      }) => {
+        const id = Date.now();
+        const category = `Sort Items Test ${id}`;
+        const itemA = `Aaa Item ${id}`;
+        const itemB = `Mmm Item ${id}`;
+        const itemBRenamed = `Zzz Item ${id}`;
+
+        // Create both items
+        await page
+          .getByRole("button", { name: "Add Item", exact: true })
+          .click();
+        await page.getByLabel("Item name").fill(itemA);
+        await page.getByLabel("Category").fill(category);
+        await page
+          .getByRole("button", { name: "Add item", exact: true })
+          .click();
+        await expect(page.getByLabel("Item name")).not.toBeVisible();
+        await expect(page.getByText(itemA)).toBeVisible();
+
+        await page
+          .getByRole("button", { name: "Add Item", exact: true })
+          .click();
+        await page.getByLabel("Item name").fill(itemB);
+        await page.getByLabel("Category").fill(category);
+        await page.getByRole("option", { name: category }).click();
+        await page
+          .getByRole("button", { name: "Add item", exact: true })
+          .click();
+        await expect(page.getByText(itemB)).toBeVisible();
+
+        // Verify initial order: itemA before itemB
+        const itemAPos = await page
+          .getByRole("row")
+          .filter({ hasText: itemA })
+          .boundingBox();
+        const itemBPos = await page
+          .getByRole("row")
+          .filter({ hasText: itemB })
+          .boundingBox();
+        expect(itemAPos!.y).toBeLessThan(itemBPos!.y);
+
+        // Rename itemA to something that sorts after itemB
+        await page.getByRole("button", { name: `Edit ${itemB}` }).click();
+        await page.getByLabel("Item name").fill(itemBRenamed);
+        await page.getByRole("button", { name: "Save changes" }).click();
+        await expect(page.getByLabel("Item name")).not.toBeVisible();
+        await expect(page.getByText(itemBRenamed)).toBeVisible();
+
+        // itemA should still be before itemBRenamed
+        const itemAAfterPos = await page
+          .getByRole("row")
+          .filter({ hasText: itemA })
+          .boundingBox();
+        const itemBRenamedPos = await page
+          .getByRole("row")
+          .filter({ hasText: itemBRenamed })
+          .boundingBox();
+        expect(itemAAfterPos!.y).toBeLessThan(itemBRenamedPos!.y);
+      });
     });
   });
 });

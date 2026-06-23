@@ -40,16 +40,24 @@ export default function GearInventoryPage() {
       return {};
     }
 
-    return data.items.reduce<Record<string, Array<ClientGearInventoryItem>>>(
-      (acc, item) => {
-        if (!acc[item.category.name]) {
-          acc[item.category.name] = [];
-        }
+    const grouped = data.items.reduce<
+      Record<string, Array<ClientGearInventoryItem>>
+    >((acc, item) => {
+      if (!acc[item.category.name]) {
+        acc[item.category.name] = [];
+      }
 
-        acc[item.category.name]!.push(item);
-        return acc;
-      },
-      {},
+      acc[item.category.name]!.push(item);
+      return acc;
+    }, {});
+
+    return Object.fromEntries(
+      Object.entries(grouped)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([category, items]) => [
+          category,
+          [...items].sort((a, b) => a.name.localeCompare(b.name)),
+        ]),
     );
   }, [data?.items]);
 
@@ -66,6 +74,16 @@ export default function GearInventoryPage() {
   const handleDelete = (item: ClientGearInventoryItem) => {
     setDeleteItem(item);
     openDelete();
+  };
+
+  const handleClose = (item: "drawer" | "modal") => {
+    if (item === "drawer") {
+      setEditItem(null);
+      closeDrawer();
+    } else if (item === "modal") {
+      setDeleteItem(null);
+      closeDelete();
+    }
   };
 
   return (
@@ -85,10 +103,14 @@ export default function GearInventoryPage() {
         ))}
       </Stack>
 
-      <EditDrawer opened={drawerOpen} onClose={closeDrawer} item={editItem} />
+      <EditDrawer
+        opened={drawerOpen}
+        onClose={() => handleClose("drawer")}
+        item={editItem}
+      />
       <DeleteModal
         opened={deleteOpen}
-        onClose={closeDelete}
+        onClose={() => handleClose("modal")}
         item={deleteItem}
       />
     </Stack>

@@ -1,5 +1,9 @@
 import { useGearCategorySearch } from "$/frontend/utils/api/gear-categories";
-import { useCreateGearInventoryItem } from "$/frontend/utils/api/gear-inventory";
+import {
+  useCreateGearInventoryItem,
+  useUpdateGearInventoryItem,
+} from "$/frontend/utils/api/gear-inventory";
+import Error from "$/frontend/shared-components/error";
 import type { ClientGearInventoryItem } from "$/transformers/gear-inventory-item";
 import {
   Button,
@@ -33,6 +37,8 @@ interface Props {
 
 export default function EditDrawer({ opened, onClose, item }: Props) {
   const createItem = useCreateGearInventoryItem();
+  const updateItem = useUpdateGearInventoryItem();
+  const isError = createItem.isError || updateItem.isError;
   const combobox = useCombobox({
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
@@ -68,21 +74,19 @@ export default function EditDrawer({ opened, onClose, item }: Props) {
   };
 
   const handleSubmit = form.onSubmit((values) => {
+    const data = {
+      name: values.name,
+      quantity: values.quantity as number,
+      existingCategoryId: values.categoryId,
+      newCategoryName: values.categoryId ? undefined : values.categoryName,
+      grams: values.grams === "" ? undefined : (values.grams as number),
+    };
     if (item === null) {
-      createItem.mutate(
-        {
-          name: values.name,
-          quantity: values.quantity as number,
-          existingCategoryId: values.categoryId,
-          newCategoryName: values.categoryId ? undefined : values.categoryName,
-          grams: values.grams === "" ? undefined : (values.grams as number),
-        },
-        {
-          onSuccess: handleClose,
-        },
-      );
+      createItem.mutate(data, {
+        onSuccess: handleClose,
+      });
     } else {
-      console.log("User tried to edit the item", values);
+      updateItem.mutate({ ...data, id: item.id }, { onSuccess: handleClose });
     }
   });
 
@@ -160,6 +164,7 @@ export default function EditDrawer({ opened, onClose, item }: Props) {
               {...form.getInputProps("grams")}
             />
           </Group>
+          {isError && <Error />}
           <Group justify="flex-end" mt="sm">
             <Button variant="subtle" onClick={handleClose}>
               Cancel
