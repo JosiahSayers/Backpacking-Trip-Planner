@@ -10,6 +10,8 @@ import SignInPage from "$/frontend/pages/sign-in.page";
 import { trailTheme } from "$/frontend/theme";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
+import { Notifications } from "@mantine/notifications";
+import "@mantine/notifications/styles.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Route, Switch } from "wouter";
 
@@ -21,6 +23,7 @@ export default function App() {
       <ColorSchemeScript />
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={trailTheme}>
+          <Notifications />
           <AppShell>
             <Switch>
               <Route path="/" component={MarketingPage} />

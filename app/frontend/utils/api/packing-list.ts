@@ -45,6 +45,7 @@ export function usePackingList(id: number) {
 
 export function useUpdatePackingList(listId: number) {
   const queryClient = useQueryClient();
+  const queryKey = packingListKeys.detail(listId);
   return useMutation({
     mutationFn: (data: z.input<typeof editPackingList>) =>
       apiClient<{ packingList: ClientFullPackingList }>(
@@ -55,10 +56,24 @@ export function useUpdatePackingList(listId: number) {
           body: JSON.stringify(data),
         },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: packingListKeys.detail(listId),
-      });
+    // Optimistically apply the edit so the UI updates instantly; roll back if
+    // the request fails, then refetch to reconcile with the server.
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous =
+        queryClient.getQueryData<ClientFullPackingList>(queryKey);
+      queryClient.setQueryData<ClientFullPackingList>(queryKey, (old) =>
+        old ? { ...old, ...data } : old,
+      );
+      return { previous };
+    },
+    onError: (_error, _data, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }

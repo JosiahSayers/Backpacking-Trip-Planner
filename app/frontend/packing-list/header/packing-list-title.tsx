@@ -4,16 +4,22 @@ import { useState } from "react";
 
 interface Props {
   value: string;
+  onSave?: (name: string) => void;
 }
 
-export default function PackingListTitle({ value: initialValue }: Props) {
+export default function PackingListTitle({ value, onSave }: Props) {
   const { editable } = usePackingList();
-  const [value, setValue] = useState(initialValue);
+  // `value` is the source of truth (driven by the React Query cache); only the
+  // in-progress edit lives locally so the displayed name never diverges.
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
 
   const commit = () => {
-    setValue(draft);
+    const name = draft.trim();
+    // A list always needs a name; ignore an empty or unchanged edit.
+    if (name && name !== value) {
+      onSave?.(name);
+    }
     setEditing(false);
   };
   const cancel = () => setEditing(false);

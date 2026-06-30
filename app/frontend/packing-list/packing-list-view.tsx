@@ -2,7 +2,9 @@ import CallToAction from "$/frontend/packing-list/header/call-to-action";
 import PackingListDescription from "$/frontend/packing-list/header/packing-list-description";
 import PackingListTitle from "$/frontend/packing-list/header/packing-list-title";
 import { PackingListProvider } from "$/frontend/packing-list/packing-list-context";
+import { useUpdatePackingList } from "$/frontend/utils/api/packing-list";
 import { sortByPosition } from "$/frontend/utils/sort-by-position";
+import { notifications } from "@mantine/notifications";
 import type { ClientFullPackingList } from "$/transformers/packing-list";
 import { Divider, Group, Stack, Text } from "@mantine/core";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
@@ -28,6 +30,7 @@ export default function PackingListView({ editable = false, list }: Props) {
   const nextTempId = useRef(-1);
   const columnsRef = useRef<HTMLDivElement>(null);
   const { register: registerSection, markMoved } = useFlipReorder();
+  const updateList = useUpdatePackingList(list.id);
 
   // Scroll a newly added section into view once it has mounted.
   useEffect(() => {
@@ -72,7 +75,22 @@ export default function PackingListView({ editable = false, list }: Props) {
       <Stack gap="xl" maw={1100} mx="auto">
         <Stack gap="xs">
           <Group justify="space-between" align="flex-start">
-            <PackingListTitle value={list.name} />
+            <PackingListTitle
+              value={list.name}
+              onSave={(name) =>
+                updateList.mutate(
+                  { name },
+                  {
+                    onError: (error) =>
+                      notifications.show({
+                        color: "red",
+                        title: "Couldn't rename list",
+                        message: error.message,
+                      }),
+                  },
+                )
+              }
+            />
             <CallToAction onAddSection={addSection} />
           </Group>
           <PackingListDescription value={list.description} />
