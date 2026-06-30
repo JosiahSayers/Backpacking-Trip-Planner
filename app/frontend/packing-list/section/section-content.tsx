@@ -5,7 +5,6 @@ import type { ClientPackingListItem } from "$/transformers/packing-list-item";
 import type { ClientPackingListSection } from "$/transformers/packing-list-section";
 import { Button, Divider, Stack, Text } from "@mantine/core";
 import { PlusIcon } from "@phosphor-icons/react";
-import { useEffect, useRef, useState } from "react";
 import SectionHeader from "./section-header";
 
 interface Props {
@@ -17,6 +16,12 @@ interface Props {
   onRename: (name: string) => void;
   onDelete: () => void;
   autoEdit: boolean;
+  autoEditItemId: number | null;
+  onAddItem: () => void;
+  onEditItem: (item: ClientPackingListItem) => void;
+  onDeleteItem: (item: ClientPackingListItem) => void;
+  onToggleOptional: (item: ClientPackingListItem) => void;
+  onReorderItem: (item: ClientPackingListItem, sortPosition: number) => void;
 }
 
 export default function SectionContent({
@@ -28,60 +33,20 @@ export default function SectionContent({
   onRename,
   onDelete,
   autoEdit,
+  autoEditItemId,
+  onAddItem,
+  onEditItem,
+  onDeleteItem,
+  onToggleOptional,
+  onReorderItem,
 }: Props) {
   const { editable } = usePackingList();
-  const [requiredItems, setRequiredItems] = useState(() =>
-    sortByPosition(section.items.filter((i) => !i.optional)),
+  // Items render straight from the cache-fed prop. A section's positions span
+  // both groups, so split by `optional` then sort each independently.
+  const requiredItems = sortByPosition(
+    section.items.filter((i) => !i.optional),
   );
-  const [optionalItems, setOptionalItems] = useState(() =>
-    sortByPosition(section.items.filter((i) => i.optional)),
-  );
-  // Item the user just added, so its row mounts directly in edit mode.
-  const [autoEditItemId, setAutoEditItemId] = useState<number | null>(null);
-  // Temporary client-side ids for items added before they're persisted.
-  const nextTempId = useRef(-1);
-
-  // The new row captures autoEdit on mount, so clear the one-shot signal once
-  // consumed — otherwise the item re-enters edit mode whenever its row
-  // remounts (e.g. when toggling optional moves it between lists).
-  useEffect(() => {
-    if (autoEditItemId != null) setAutoEditItemId(null);
-  }, [autoEditItemId]);
-
-  function handleAddItem() {
-    const id = nextTempId.current--;
-    const sortPosition =
-      Math.max(
-        0,
-        ...requiredItems.map((i) => i.sortPosition),
-        ...optionalItems.map((i) => i.sortPosition),
-      ) + 1;
-    setAutoEditItemId(id);
-    setRequiredItems((prev) => [
-      ...prev,
-      { id, name: "New item", optional: false, quantity: 1, sortPosition },
-    ]);
-  }
-
-  function handleEditItem(updated: ClientPackingListItem) {
-    const setter = updated.optional ? setOptionalItems : setRequiredItems;
-    setter((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
-  }
-
-  function handleDeleteItem(item: ClientPackingListItem) {
-    const setter = item.optional ? setOptionalItems : setRequiredItems;
-    setter((prev) => prev.filter((i) => i.id !== item.id));
-  }
-
-  function handleToggleOptional(item: ClientPackingListItem) {
-    if (item.optional) {
-      setOptionalItems((prev) => prev.filter((i) => i.id !== item.id));
-      setRequiredItems((prev) => [...prev, { ...item, optional: false }]);
-    } else {
-      setRequiredItems((prev) => prev.filter((i) => i.id !== item.id));
-      setOptionalItems((prev) => [...prev, { ...item, optional: true }]);
-    }
-  }
+  const optionalItems = sortByPosition(section.items.filter((i) => i.optional));
 
   return (
     <Stack gap="xs" pb="xl" style={{ breakInside: "avoid" }}>
@@ -98,10 +63,10 @@ export default function SectionContent({
       <Divider />
       <ItemList
         items={requiredItems}
-        onReorder={setRequiredItems}
-        onToggleOptional={handleToggleOptional}
-        onEditItem={handleEditItem}
-        onDeleteItem={handleDeleteItem}
+        onReorder={onReorderItem}
+        onToggleOptional={onToggleOptional}
+        onEditItem={onEditItem}
+        onDeleteItem={onDeleteItem}
         autoEditItemId={autoEditItemId}
       />
 
@@ -112,10 +77,10 @@ export default function SectionContent({
           </Text>
           <ItemList
             items={optionalItems}
-            onReorder={setOptionalItems}
-            onToggleOptional={handleToggleOptional}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItem}
+            onReorder={onReorderItem}
+            onToggleOptional={onToggleOptional}
+            onEditItem={onEditItem}
+            onDeleteItem={onDeleteItem}
             autoEditItemId={autoEditItemId}
           />
         </>
@@ -129,7 +94,7 @@ export default function SectionContent({
           justify="flex-start"
           mt="xs"
           color="gray"
-          onClick={handleAddItem}
+          onClick={onAddItem}
         >
           Add item
         </Button>

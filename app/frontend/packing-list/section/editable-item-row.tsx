@@ -179,6 +179,7 @@ export default function EditableItemRow({
         variant="subtle"
         color="red"
         size="xs"
+        aria-label="Delete item"
         style={{
           visibility: showControls ? "visible" : "hidden",
           flexShrink: 0,

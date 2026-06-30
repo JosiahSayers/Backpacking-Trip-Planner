@@ -3,13 +3,17 @@ import PackingListDescription from "$/frontend/packing-list/header/packing-list-
 import PackingListTitle from "$/frontend/packing-list/header/packing-list-title";
 import { PackingListProvider } from "$/frontend/packing-list/packing-list-context";
 import {
+  useCreateItem,
   useCreateSection,
+  useDeleteItem,
   useDeleteSection,
+  useUpdateItem,
   useUpdatePackingList,
   useUpdateSection,
 } from "$/frontend/utils/api/packing-list";
 import { sortByPosition } from "$/frontend/utils/sort-by-position";
 import type { ClientFullPackingList } from "$/transformers/packing-list";
+import type { ClientPackingListItem } from "$/transformers/packing-list-item";
 import { Divider, Group, Stack, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
@@ -30,6 +34,8 @@ export default function PackingListView({ editable = false, list }: Props) {
   const [autoEditSectionId, setAutoEditSectionId] = useState<number | null>(
     null,
   );
+  // Item the user just added, so its row mounts directly in edit mode.
+  const [autoEditItemId, setAutoEditItemId] = useState<number | null>(null);
   const columnsRef = useRef<HTMLDivElement>(null);
   const { register: registerSection, markMoved } = useFlipReorder();
 
@@ -37,6 +43,9 @@ export default function PackingListView({ editable = false, list }: Props) {
   const createSection = useCreateSection(list.id);
   const updateSection = useUpdateSection(list.id);
   const deleteSection = useDeleteSection(list.id);
+  const createItem = useCreateItem(list.id);
+  const updateItem = useUpdateItem(list.id);
+  const deleteItem = useDeleteItem(list.id);
 
   const notifyError = (title: string) => (error: Error) =>
     notifications.show({ color: "red", title, message: error.message });
@@ -48,6 +57,13 @@ export default function PackingListView({ editable = false, list }: Props) {
       ?.querySelector(`[data-section-id="${autoEditSectionId}"]`)
       ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [autoEditSectionId]);
+
+  // The new row captures autoEdit on mount, so clear the one-shot signal once
+  // consumed — otherwise the item re-enters edit mode whenever its row remounts
+  // (e.g. when toggling optional moves it between lists).
+  useEffect(() => {
+    if (autoEditItemId != null) setAutoEditItemId(null);
+  }, [autoEditItemId]);
 
   function handleMoveSection(index: number, direction: "up" | "down") {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
@@ -86,6 +102,52 @@ export default function PackingListView({ editable = false, list }: Props) {
         onSuccess: ({ section }) => setAutoEditSectionId(section.id),
         onError: notifyError("Couldn't add section"),
       },
+    );
+  }
+
+  function handleAddItem(sectionId: number) {
+    createItem.mutate(
+      { sectionId, name: "New item", quantity: 1 },
+      {
+        // Reveal the persisted item in edit mode once it has an id.
+        onSuccess: ({ item }) => setAutoEditItemId(item.id),
+        onError: notifyError("Couldn't add item"),
+      },
+    );
+  }
+
+  function handleEditItem(sectionId: number, item: ClientPackingListItem) {
+    updateItem.mutate(
+      { sectionId, itemId: item.id, name: item.name, quantity: item.quantity },
+      { onError: notifyError("Couldn't update item") },
+    );
+  }
+
+  function handleDeleteItem(sectionId: number, item: ClientPackingListItem) {
+    deleteItem.mutate(
+      { sectionId, itemId: item.id },
+      { onError: notifyError("Couldn't delete item") },
+    );
+  }
+
+  function handleToggleOptional(
+    sectionId: number,
+    item: ClientPackingListItem,
+  ) {
+    updateItem.mutate(
+      { sectionId, itemId: item.id, optional: !item.optional },
+      { onError: notifyError("Couldn't update item") },
+    );
+  }
+
+  function handleReorderItem(
+    sectionId: number,
+    item: ClientPackingListItem,
+    sortPosition: number,
+  ) {
+    updateItem.mutate(
+      { sectionId, itemId: item.id, sortPosition },
+      { onError: notifyError("Couldn't reorder items") },
     );
   }
 
@@ -146,6 +208,16 @@ export default function PackingListView({ editable = false, list }: Props) {
                 onRename={(name) => handleRenameSection(section.id, name)}
                 onDelete={() => handleDeleteSection(section.id)}
                 autoEdit={section.id === autoEditSectionId}
+                autoEditItemId={autoEditItemId}
+                onAddItem={() => handleAddItem(section.id)}
+                onEditItem={(item) => handleEditItem(section.id, item)}
+                onDeleteItem={(item) => handleDeleteItem(section.id, item)}
+                onToggleOptional={(item) =>
+                  handleToggleOptional(section.id, item)
+                }
+                onReorderItem={(item, sortPosition) =>
+                  handleReorderItem(section.id, item, sortPosition)
+                }
               />
             </div>
           ))}

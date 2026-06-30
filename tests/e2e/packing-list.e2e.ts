@@ -33,10 +33,30 @@ async function findListIdByName(page: Page, name: string): Promise<number> {
   return match.id;
 }
 
-async function addSectionViaApi(page: Page, listId: number, name: string) {
+async function addSectionViaApi(
+  page: Page,
+  listId: number,
+  name: string,
+): Promise<number> {
   const response = await page.request.post(
     `/api/packing-lists/${listId}/sections`,
     { data: { name } },
+  );
+  expect(response.ok()).toBe(true);
+  const { section } = await response.json();
+  return section.id;
+}
+
+async function addItemViaApi(
+  page: Page,
+  listId: number,
+  sectionId: number,
+  name: string,
+  optional = false,
+) {
+  const response = await page.request.post(
+    `/api/packing-lists/${listId}/sections/${sectionId}/items`,
+    { data: { name, quantity: 1, optional } },
   );
   expect(response.ok()).toBe(true);
 }
@@ -225,6 +245,89 @@ test.describe("Packing List Page", () => {
 
         await page.reload();
         await expect(headings).toHaveText(["Second Section", "First Section"]);
+      });
+    });
+
+    test.describe("items", () => {
+      let sectionId: number;
+
+      test.beforeEach(async ({ page }) => {
+        sectionId = await addSectionViaApi(page, listId, "Pack List");
+        await page.reload();
+        await expect(
+          page.getByRole("heading", { level: 5, name: "Pack List" }),
+        ).toBeVisible();
+      });
+
+      test("adding an item reveals it in edit mode and persists", async ({
+        page,
+      }) => {
+        await page.getByRole("button", { name: "Add item" }).click();
+
+        const input = page.getByRole("textbox", { name: "Item name" });
+        await expect(input).toHaveValue("New item");
+        await input.fill("Headlamp");
+        await input.press("Enter");
+
+        await expect(page.getByText("Headlamp")).toBeVisible();
+
+        await page.reload();
+        await expect(page.getByText("Headlamp")).toBeVisible();
+      });
+
+      test("editing an item's name persists across a reload", async ({
+        page,
+      }) => {
+        await addItemViaApi(page, listId, sectionId, "Original Item");
+        await page.reload();
+
+        await page.getByText("Original Item").click();
+        const input = page.getByRole("textbox", { name: "Item name" });
+        await input.fill("Renamed Item");
+        await input.press("Enter");
+
+        await expect(page.getByText("Renamed Item")).toBeVisible();
+
+        await page.reload();
+        await expect(page.getByText("Renamed Item")).toBeVisible();
+      });
+
+      test("deleting an item removes it and persists", async ({ page }) => {
+        await addItemViaApi(page, listId, sectionId, "Doomed Item");
+        await page.reload();
+
+        await page.getByText("Doomed Item").hover();
+        await page.getByRole("button", { name: "Delete item" }).click();
+
+        await expect(page.getByText("Delete item?")).toBeVisible();
+        await page.getByRole("button", { name: "Delete", exact: true }).click();
+
+        await expect(page.getByText("Doomed Item")).not.toBeVisible();
+
+        await page.reload();
+        await expect(page.getByText("Doomed Item")).not.toBeVisible();
+      });
+
+      test("toggling an item to optional persists across a reload", async ({
+        page,
+      }) => {
+        await addItemViaApi(page, listId, sectionId, "Trekking Poles");
+        await page.reload();
+
+        // No optional items yet, so the "Optional" subheading is absent.
+        // `exact` keeps this off the lowercase "optional" badge on each row.
+        await expect(
+          page.getByText("Optional", { exact: true }),
+        ).not.toBeVisible();
+
+        await page.getByText("Trekking Poles").hover();
+        await page.getByText("optional").click();
+
+        await expect(page.getByText("Optional", { exact: true })).toBeVisible();
+
+        await page.reload();
+        await expect(page.getByText("Optional", { exact: true })).toBeVisible();
+        await expect(page.getByText("Trekking Poles")).toBeVisible();
       });
     });
   });

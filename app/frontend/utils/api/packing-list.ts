@@ -210,6 +210,7 @@ export function useDeleteSection(listId: number) {
 
 export function useCreateItem(listId: number) {
   const queryClient = useQueryClient();
+  const queryKey = packingListKeys.detail(listId);
   return useMutation({
     mutationFn: ({
       sectionId,
@@ -223,16 +224,31 @@ export function useCreateItem(listId: number) {
           body: JSON.stringify(data),
         },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: packingListKeys.detail(listId),
-      });
+    // Append the server's item (with its real id) so it can be revealed in edit
+    // mode without a temp id to swap.
+    onSuccess: ({ item }, { sectionId }) => {
+      queryClient.setQueryData<ClientFullPackingList>(queryKey, (old) =>
+        old
+          ? {
+              ...old,
+              sections: old.sections.map((section) =>
+                section.id === sectionId
+                  ? { ...section, items: [...section.items, item] }
+                  : section,
+              ),
+            }
+          : old,
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
 
 export function useUpdateItem(listId: number) {
   const queryClient = useQueryClient();
+  const queryKey = packingListKeys.detail(listId);
   return useMutation({
     mutationFn: ({
       sectionId,
@@ -247,16 +263,41 @@ export function useUpdateItem(listId: number) {
           body: JSON.stringify(data),
         },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: packingListKeys.detail(listId),
-      });
+    onMutate: ({ sectionId, itemId, ...data }) =>
+      snapshotList(queryClient, queryKey, (list) => ({
+        ...list,
+        sections: list.sections.map((section) => {
+          if (section.id !== sectionId) return section;
+          let items = section.items;
+          // Reorder: mirror the backend (push items at/after the new position
+          // down, then place the target). Item positions span the whole
+          // section, so optional and required items share one sequence.
+          if (data.sortPosition != null) {
+            items = items.map((item) =>
+              item.id !== itemId && item.sortPosition >= data.sortPosition!
+                ? { ...item, sortPosition: item.sortPosition + 1 }
+                : item,
+            );
+          }
+          return {
+            ...section,
+            items: items.map((item) =>
+              item.id === itemId ? { ...item, ...data } : item,
+            ),
+          };
+        }),
+      })),
+    onError: (_error, _vars, context) =>
+      rollbackList(queryClient, queryKey, context),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
 
 export function useDeleteItem(listId: number) {
   const queryClient = useQueryClient();
+  const queryKey = packingListKeys.detail(listId);
   return useMutation({
     mutationFn: ({
       sectionId,
@@ -269,10 +310,22 @@ export function useDeleteItem(listId: number) {
         `/api/packing-lists/${listId}/sections/${sectionId}/items/${itemId}`,
         { method: "DELETE" },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: packingListKeys.detail(listId),
-      });
+    onMutate: ({ sectionId, itemId }) =>
+      snapshotList(queryClient, queryKey, (list) => ({
+        ...list,
+        sections: list.sections.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                items: section.items.filter((item) => item.id !== itemId),
+              }
+            : section,
+        ),
+      })),
+    onError: (_error, _vars, context) =>
+      rollbackList(queryClient, queryKey, context),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }

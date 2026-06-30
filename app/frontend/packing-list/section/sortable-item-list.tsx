@@ -10,7 +10,6 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -18,7 +17,7 @@ import EditableItemRow from "./editable-item-row";
 
 export interface SortableItemListProps {
   items: ClientPackingListItem[];
-  onReorder: (items: ClientPackingListItem[]) => void;
+  onReorder: (item: ClientPackingListItem, sortPosition: number) => void;
   onToggleOptional: (item: ClientPackingListItem) => void;
   onEditItem: (item: ClientPackingListItem) => void;
   onDeleteItem: (item: ClientPackingListItem) => void;
@@ -42,11 +41,18 @@ export default function SortableItemList({
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((i) => i.id === active.id);
-      const newIndex = items.findIndex((i) => i.id === over.id);
-      onReorder(arrayMove(items, oldIndex, newIndex));
-    }
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((i) => i.id === active.id);
+    const newIndex = items.findIndex((i) => i.id === over.id);
+    const dragged = items[oldIndex]!;
+    const target = items[newIndex]!;
+    // Persist by placing the dragged item relative to its drop target: before
+    // it when moving up, after it when moving down. The backend's
+    // insert-and-push-down logic resolves the rest (see useUpdateItem).
+    const sortPosition =
+      newIndex > oldIndex ? target.sortPosition + 1 : target.sortPosition;
+    onReorder(dragged, sortPosition);
   }
 
   return (

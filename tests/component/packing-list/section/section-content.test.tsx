@@ -6,11 +6,18 @@ import { MantineProvider } from "@mantine/core";
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { useState } from "react";
 
 const onMoveUp = mock(() => {});
 const onMoveDown = mock(() => {});
 const onRename = mock(() => {});
 const onDelete = mock(() => {});
+const onEditItem = mock((_item: ClientPackingListItem) => {});
+const onDeleteItem = mock((_item: ClientPackingListItem) => {});
+const onToggleOptional = mock((_item: ClientPackingListItem) => {});
+const onReorderItem = mock(
+  (_item: ClientPackingListItem, _sortPosition: number) => {},
+);
 
 const requiredItem: ClientPackingListItem = {
   id: 1,
@@ -37,23 +44,67 @@ const baseSection: ClientPackingListSection & {
   items: [requiredItem],
 };
 
+// `SectionContent` is controlled — items come from the `section` prop (the React
+// Query cache in the real app). This wrapper stands in for that owner, applying
+// item callbacks to local state so persisted changes flow back through props.
 function renderSection(editable: boolean, section = baseSection) {
-  render(
-    <MantineProvider>
-      <PackingListProvider value={{ editable }}>
-        <SectionContent
-          section={section}
-          isFirst={false}
-          isLast={false}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          onRename={onRename}
-          onDelete={onDelete}
-          autoEdit={false}
-        />
-      </PackingListProvider>
-    </MantineProvider>,
-  );
+  function Wrapper() {
+    const [items, setItems] = useState(section.items);
+    const [autoEditItemId, setAutoEditItemId] = useState<number | null>(null);
+
+    return (
+      <MantineProvider>
+        <PackingListProvider value={{ editable }}>
+          <SectionContent
+            section={{ ...section, items }}
+            isFirst={false}
+            isLast={false}
+            onMoveUp={onMoveUp}
+            onMoveDown={onMoveDown}
+            onRename={onRename}
+            onDelete={onDelete}
+            autoEdit={false}
+            autoEditItemId={autoEditItemId}
+            onAddItem={() => {
+              const id = Math.max(0, ...items.map((i) => i.id)) + 1;
+              setItems((prev) => [
+                ...prev,
+                {
+                  id,
+                  name: "New item",
+                  optional: false,
+                  quantity: 1,
+                  sortPosition: prev.length + 1,
+                },
+              ]);
+              setAutoEditItemId(id);
+            }}
+            onEditItem={(updated) => {
+              onEditItem(updated);
+              setItems((prev) =>
+                prev.map((i) => (i.id === updated.id ? updated : i)),
+              );
+            }}
+            onDeleteItem={(item) => {
+              onDeleteItem(item);
+              setItems((prev) => prev.filter((i) => i.id !== item.id));
+            }}
+            onToggleOptional={(item) => {
+              onToggleOptional(item);
+              setItems((prev) =>
+                prev.map((i) =>
+                  i.id === item.id ? { ...i, optional: !i.optional } : i,
+                ),
+              );
+            }}
+            onReorderItem={onReorderItem}
+          />
+        </PackingListProvider>
+      </MantineProvider>
+    );
+  }
+
+  render(<Wrapper />);
 }
 
 beforeEach(() => {
@@ -61,6 +112,10 @@ beforeEach(() => {
   onMoveDown.mockReset();
   onRename.mockReset();
   onDelete.mockReset();
+  onEditItem.mockReset();
+  onDeleteItem.mockReset();
+  onToggleOptional.mockReset();
+  onReorderItem.mockReset();
 });
 
 describe("section display", () => {
@@ -128,6 +183,7 @@ describe("editing an item", () => {
     fireEvent.keyDown(screen.getByRole("textbox", { name: "Item name" }), {
       key: "Enter",
     });
+    expect(onEditItem).toHaveBeenCalled();
     expect(screen.getByText("Sleeping bag liner")).toBeInTheDocument();
   });
 });
@@ -137,6 +193,7 @@ describe("toggling an item's optional status", () => {
     // Use a single optional item so getByText("optional") is unambiguous
     renderSection(true, { ...baseSection, items: [optionalItem] });
     fireEvent.click(screen.getByText("optional"));
+    expect(onToggleOptional).toHaveBeenCalled();
     expect(screen.queryByText("Optional")).not.toBeInTheDocument();
   });
 });
