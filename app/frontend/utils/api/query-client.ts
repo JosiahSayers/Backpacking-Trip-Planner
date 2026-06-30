@@ -1,0 +1,15 @@
+import { QueryClient } from "@tanstack/react-query";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        if ((error as any)?.status === 403) {
+          return false;
+        }
+
+        return failureCount < 3;
+      },
+    },
+  },
+});

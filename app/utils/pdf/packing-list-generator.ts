@@ -1,5 +1,5 @@
-import PDFDocument from "pdfkit";
 import { db } from "$/utils/db";
+import PDFDocument from "pdfkit";
 
 export async function generatePackingListPdf(
   packingListId: number,
@@ -24,7 +24,7 @@ export async function generatePackingListPdf(
   const document = new PDFDocument({
     info: {
       Title: packingList.name,
-      Author: packingList.owner?.name ?? "Backpacking Trip Planner",
+      Author: packingList.owner?.name ?? "Outpost",
     },
     margin: 36,
     permissions: {
