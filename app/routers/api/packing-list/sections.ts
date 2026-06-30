@@ -14,6 +14,7 @@ import {
 import { idParam } from "$/validation/shared";
 import { Router } from "express";
 import validate from "express-zod-safe";
+import type { PackingListSection } from "../../../../generated/prisma/client";
 
 export const sectionsRouter = Router({ mergeParams: true });
 
@@ -93,33 +94,36 @@ sectionsRouter.patch(
     });
 
     const currentHighestSort = getHighestSort(existingSections);
+    let updatedSection: PackingListSection;
 
-    if (
-      newPositionIsNotLastPosition(currentHighestSort, req.body.sortPosition)
-    ) {
-      // Find sections that are greater than or equal to the new sort position
-      const sectionsToIncrement = existingSections.filter(
-        (s) => s.sortPosition >= req.body.sortPosition!,
-      );
-      // Increment the sort position for all filtered sections
-      for (const section of sectionsToIncrement) {
-        await db.packingListSection.update({
-          where: { id: section.id },
-          data: { sortPosition: section.sortPosition + 1 },
-        });
+    await db.$transaction(async (tx) => {
+      if (
+        newPositionIsNotLastPosition(currentHighestSort, req.body.sortPosition)
+      ) {
+        // Find sections that are greater than or equal to the new sort position
+        const sectionsToIncrement = existingSections.filter(
+          (s) => s.sortPosition >= req.body.sortPosition!,
+        );
+        // Increment the sort position for all filtered sections
+        for (const section of sectionsToIncrement) {
+          await tx.packingListSection.update({
+            where: { id: section.id },
+            data: { sortPosition: section.sortPosition + 1 },
+          });
+        }
       }
-    }
 
-    const updatedSection = await db.packingListSection.update({
-      where: { id: Number(req.params.sectionId) },
-      data: {
-        name: req.body.name,
-        sortPosition: req.body.sortPosition,
-      },
+      updatedSection = await tx.packingListSection.update({
+        where: { id: Number(req.params.sectionId) },
+        data: {
+          name: req.body.name,
+          sortPosition: req.body.sortPosition,
+        },
+      });
     });
 
     return res.json({
-      section: transformers.packingListSection(updatedSection),
+      section: transformers.packingListSection(updatedSection!),
     });
   },
 );

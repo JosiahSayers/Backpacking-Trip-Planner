@@ -5,10 +5,15 @@ import {
   newPositionIsNotLastPosition,
   sendOutOfOrderResponse,
 } from "$/utils/sorting";
-import { createItem } from "$/validation/packing-list/item";
+import {
+  createItem,
+  itemParams,
+  updateItem,
+} from "$/validation/packing-list/item";
 import { sectionParams } from "$/validation/packing-list/section";
 import { Router } from "express";
 import validate from "express-zod-safe";
+import type { PackingListItem } from "../../../../generated/prisma/client";
 
 export const itemsRouter = Router({ mergeParams: true });
 
@@ -44,6 +49,7 @@ itemsRouter.post(
       data: {
         name: req.body.name,
         quantity: req.body.quantity,
+        optional: req.body.optional,
         sortPosition: req.body.sortPosition ?? currentHighestSort + 1,
         packingListSectionId: Number(req.params.sectionId),
         gearInventoryItemId: req.body.assignedGearId,
@@ -57,6 +63,83 @@ itemsRouter.post(
   },
 );
 
-itemsRouter.delete("/:itemId", validate({}), async (req, res) => {});
+itemsRouter.delete(
+  "/:itemId",
+  validate({ params: itemParams }),
+  async (req, res) => {
+    const item = await db.packingListItem.findUnique({
+      where: {
+        id: Number(req.params.itemId),
+        packingListSectionId: Number(req.params.sectionId),
+      },
+    });
 
-itemsRouter.patch("/:itemId", validate({}), async (req, res) => {});
+    if (!item) {
+      return res.sendStatus(404);
+    }
+
+    await db.packingListItem.delete({
+      where: {
+        id: Number(req.params.itemId),
+      },
+    });
+
+    return res.sendStatus(200);
+  },
+);
+
+itemsRouter.patch(
+  "/:itemId",
+  validate({ body: updateItem, params: itemParams }),
+  async (req, res) => {
+    const existingItems = await db.packingListItem.findMany({
+      where: {
+        packingListSectionId: Number(req.params.sectionId),
+      },
+    });
+
+    const itemToUpdate = existingItems.find(
+      (i) => i.id === Number(req.params.itemId),
+    );
+
+    if (!itemToUpdate) {
+      return res.sendStatus(404);
+    }
+
+    const currentHighestSort = getHighestSort(existingItems);
+    let updatedItem: PackingListItem;
+
+    await db.$transaction(async (tx) => {
+      if (
+        newPositionIsNotLastPosition(currentHighestSort, req.body.sortPosition)
+      ) {
+        const itemsToIncrement = existingItems.filter(
+          (i) => i.sortPosition >= req.body.sortPosition!,
+        );
+        for (const item of itemsToIncrement) {
+          await tx.packingListItem.update({
+            where: { id: item.id },
+            data: { sortPosition: item.sortPosition + 1 },
+          });
+        }
+      }
+
+      updatedItem = await tx.packingListItem.update({
+        where: { id: Number(req.params.itemId) },
+        data: {
+          name: req.body.name,
+          quantity: req.body.quantity,
+          optional: req.body.optional,
+          sortPosition: req.body.sortPosition ?? currentHighestSort + 1,
+          packingListSectionId: Number(req.params.sectionId),
+          gearInventoryItemId: req.body.assignedGearId,
+          gearCategoryId: req.body.gearCategoryId,
+        },
+      });
+    });
+
+    return res.json({
+      item: transformers.packingListItem(updatedItem!),
+    });
+  },
+);
