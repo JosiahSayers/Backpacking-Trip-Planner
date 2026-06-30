@@ -1,11 +1,4 @@
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "bun:test";
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { getAuthCookies } from "../../helpers/auth";
 import supertest from "supertest";
 import { app } from "$/server";
@@ -17,7 +10,11 @@ let sectionId: number;
 
 beforeAll(async () => {
   authCookies = await getAuthCookies();
+});
 
+// The database is reset to the seeded baseline after every test, so the list
+// and section fixtures are recreated per-test rather than once in beforeAll.
+beforeEach(async () => {
   const listRes = await supertest(app)
     .post("/api/packing-lists")
     .set("Cookie", authCookies)
@@ -31,14 +28,6 @@ beforeAll(async () => {
     .send({ name: "Test Section" })
     .expect(201);
   sectionId = sectionRes.body.section.id;
-});
-
-afterEach(async () => {
-  await db.packingListItem.deleteMany({
-    where: {
-      packingListSectionId: sectionId,
-    },
-  });
 });
 
 describe("POST /", () => {
