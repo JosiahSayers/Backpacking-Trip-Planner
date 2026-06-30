@@ -93,6 +93,14 @@ sectionsRouter.patch(
       },
     });
 
+    const sectionToUpdate = existingSections.find(
+      (s) => s.id === Number(req.params.sectionId),
+    );
+
+    if (!sectionToUpdate) {
+      return res.sendStatus(404);
+    }
+
     const currentHighestSort = getHighestSort(existingSections);
     let updatedSection: PackingListSection;
 
