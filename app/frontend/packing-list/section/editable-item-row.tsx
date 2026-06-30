@@ -1,20 +1,42 @@
+import ConfirmDeleteModal from "$/frontend/packing-list/confirm-delete-modal";
 import StaticItemRow from "$/frontend/packing-list/section/static-item-row";
 import type { ClientPackingListItem } from "$/transformers/packing-list-item";
 import { useDndContext } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
-import { ActionIcon, Badge, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Group,
+  NumberInput,
+  TextInput,
+} from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { DotsSixVerticalIcon, TrashIcon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface Props {
   item: ClientPackingListItem;
   onToggleOptional: () => void;
+  onEdit: (item: ClientPackingListItem) => void;
+  onDelete: () => void;
+  autoEdit: boolean;
 }
 
-export default function EditableItemRow({ item, onToggleOptional }: Props) {
+export default function EditableItemRow({
+  item,
+  onToggleOptional,
+  onEdit,
+  onDelete,
+  autoEdit,
+}: Props) {
   const [hovered, setHovered] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(item.name);
+  const [confirmOpened, confirm] = useDisclosure(false);
+  const [editing, setEditing] = useState(autoEdit);
+  const [draftName, setDraftName] = useState(item.name);
+  const [draftQuantity, setDraftQuantity] = useState(item.quantity);
+  // Select the placeholder name only on the initial auto-edit of a new item,
+  // not on subsequent manual edits.
+  const selectOnFocus = useRef(autoEdit);
   const { active: dndActive } = useDndContext();
 
   const {
@@ -26,26 +48,59 @@ export default function EditableItemRow({ item, onToggleOptional }: Props) {
     isDragging,
   } = useSortable({ id: item.id });
 
-  const commit = () => setEditing(false);
-  const cancel = () => {
-    setValue(item.name);
+  const startEditing = () => {
+    setDraftName(item.name);
+    setDraftQuantity(item.quantity);
+    setEditing(true);
+  };
+  const commit = () => {
+    const name = draftName.trim();
+    if (name) onEdit({ ...item, name, quantity: draftQuantity });
     setEditing(false);
   };
+  const cancel = () => setEditing(false);
 
   if (editing) {
     return (
-      <TextInput
-        value={value}
-        onChange={(e) => setValue(e.currentTarget.value)}
-        onBlur={commit}
+      <Group
+        gap={4}
+        my={2}
+        onBlur={(e) => {
+          // Commit only when focus leaves the row entirely (e.g. tabbing from
+          // the name field to the quantity stepper should not commit).
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) commit();
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();
           if (e.key === "Escape") cancel();
         }}
-        autoFocus
-        size="xs"
-        my={2}
-      />
+      >
+        <TextInput
+          value={draftName}
+          onChange={(e) => setDraftName(e.currentTarget.value)}
+          autoFocus
+          onFocus={(e) => {
+            if (selectOnFocus.current) {
+              e.currentTarget.select();
+              selectOnFocus.current = false;
+            }
+          }}
+          size="xs"
+          flex={1}
+          aria-label="Item name"
+        />
+        <NumberInput
+          value={draftQuantity}
+          onChange={(val) =>
+            setDraftQuantity(typeof val === "number" ? val : 1)
+          }
+          min={1}
+          allowDecimal={false}
+          size="xs"
+          w={70}
+          aria-label="Quantity"
+        />
+      </Group>
     );
   }
 
@@ -78,7 +133,7 @@ export default function EditableItemRow({ item, onToggleOptional }: Props) {
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => setEditing(true)}
+      onClick={startEditing}
     >
       <ActionIcon
         variant="transparent"
@@ -122,16 +177,29 @@ export default function EditableItemRow({ item, onToggleOptional }: Props) {
       </Badge>
       <ActionIcon
         variant="subtle"
-        color="gray"
+        color="red"
         size="xs"
         style={{
           visibility: showControls ? "visible" : "hidden",
           flexShrink: 0,
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          confirm.open();
+        }}
       >
         <TrashIcon size={12} />
       </ActionIcon>
+
+      <ConfirmDeleteModal
+        opened={confirmOpened}
+        onClose={confirm.close}
+        onConfirm={onDelete}
+        title="Delete item?"
+      >
+        Remove <strong>{item.name}</strong> from this section? This can&apos;t be
+        undone.
+      </ConfirmDeleteModal>
     </div>
   );
 }

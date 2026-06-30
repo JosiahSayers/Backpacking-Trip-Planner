@@ -25,7 +25,10 @@ export default function App() {
               <Route path="/" component={MarketingPage} />
               <Route path="/dashboard" component={DashboardPage} />
               <Route path="/gear-inventory" component={GearInventoryPage} />
-              <Route path="/packing-list-mock" component={PackingListMockPage} />
+              <Route
+                path="/packing-list-mock"
+                component={PackingListMockPage}
+              />
               <Route path="/sign-in" component={SignInPage} />
               <Route path="/register" component={RegisterPage} />
               <Route component={NotFoundPage} />

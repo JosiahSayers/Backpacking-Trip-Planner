@@ -2,11 +2,20 @@ import { usePackingList } from "$/frontend/packing-list/packing-list-context";
 import { Button } from "@mantine/core";
 import { CopyIcon, PlusIcon } from "@phosphor-icons/react";
 
-export default function CallToAction() {
+interface Props {
+  onAddSection: () => void;
+}
+
+export default function CallToAction({ onAddSection }: Props) {
   const { editable } = usePackingList();
 
   return editable ? (
-    <Button leftSection={<PlusIcon size={16} />} variant="default" size="md">
+    <Button
+      leftSection={<PlusIcon size={16} />}
+      variant="default"
+      size="md"
+      onClick={onAddSection}
+    >
       Add section
     </Button>
   ) : (

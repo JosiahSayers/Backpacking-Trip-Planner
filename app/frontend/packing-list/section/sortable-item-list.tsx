@@ -20,12 +20,18 @@ export interface SortableItemListProps {
   items: ClientPackingListItem[];
   onReorder: (items: ClientPackingListItem[]) => void;
   onToggleOptional: (item: ClientPackingListItem) => void;
+  onEditItem: (item: ClientPackingListItem) => void;
+  onDeleteItem: (item: ClientPackingListItem) => void;
+  autoEditItemId: number | null;
 }
 
 export default function SortableItemList({
   items,
   onReorder,
   onToggleOptional,
+  onEditItem,
+  onDeleteItem,
+  autoEditItemId,
 }: SortableItemListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -58,6 +64,9 @@ export default function SortableItemList({
             key={item.id}
             item={item}
             onToggleOptional={() => onToggleOptional(item)}
+            onEdit={onEditItem}
+            onDelete={() => onDeleteItem(item)}
+            autoEdit={item.id === autoEditItemId}
           />
         ))}
       </SortableContext>
