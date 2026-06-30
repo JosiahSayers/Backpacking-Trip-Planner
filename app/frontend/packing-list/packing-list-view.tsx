@@ -19,9 +19,7 @@ interface Props {
 export default function PackingListView({ editable = false, list }: Props) {
   // Local copy of the sections kept in display order. Ordering is not yet
   // persisted to the backend, so reorders only mutate this state for now.
-  const [sections, setSections] = useState(() =>
-    sortByPosition(list.sections),
-  );
+  const [sections, setSections] = useState(() => sortByPosition(list.sections));
   // Section the user just added, so it mounts directly in edit mode.
   const [autoEditSectionId, setAutoEditSectionId] = useState<number | null>(
     null,

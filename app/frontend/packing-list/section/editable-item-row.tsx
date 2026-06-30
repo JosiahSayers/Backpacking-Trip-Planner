@@ -197,8 +197,8 @@ export default function EditableItemRow({
         onConfirm={onDelete}
         title="Delete item?"
       >
-        Remove <strong>{item.name}</strong> from this section? This can&apos;t be
-        undone.
+        Remove <strong>{item.name}</strong> from this section? This can&apos;t
+        be undone.
       </ConfirmDeleteModal>
     </div>
   );
