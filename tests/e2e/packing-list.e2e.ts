@@ -66,6 +66,35 @@ function sectionCard(page: Page, name: string) {
   return page.locator("div[data-section-id]").filter({ hasText: name });
 }
 
+async function itemY(page: Page, name: string): Promise<number> {
+  const box = await page.getByText(name).boundingBox();
+  if (!box) throw new Error(`No item row found for "${name}"`);
+  return box.y;
+}
+
+// Drive a dnd-kit pointer drag of one item's handle onto another item. dnd-kit's
+// PointerSensor needs an initial movement to activate, then intermediate moves
+// to track the drag, so a plain dragTo won't do.
+async function dragItemOnto(page: Page, fromName: string, toName: string) {
+  await page.getByText(fromName).hover();
+  const handle = page.getByRole("button", { name: `Reorder ${fromName}` });
+  const handleBox = await handle.boundingBox();
+  const targetBox = await page.getByText(toName).boundingBox();
+  if (!handleBox || !targetBox) throw new Error("Missing drag geometry");
+
+  const startX = handleBox.x + handleBox.width / 2;
+  const startY = handleBox.y + handleBox.height / 2;
+  const endX = targetBox.x + targetBox.width / 2;
+  const endY = targetBox.y + targetBox.height / 2;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY - 8, { steps: 5 });
+  await page.mouse.move(endX, endY, { steps: 15 });
+  await page.mouse.move(endX, endY, { steps: 5 });
+  await page.mouse.up();
+}
+
 test.beforeEach(async ({ page }) => {
   // Suppress benign ResizeObserver errors that trigger Bun's dev-server error
   // overlay, which intercepts pointer events and causes test failures.
@@ -328,6 +357,33 @@ test.describe("Packing List Page", () => {
         await page.reload();
         await expect(page.getByText("Optional", { exact: true })).toBeVisible();
         await expect(page.getByText("Trekking Poles")).toBeVisible();
+      });
+
+      test("dragging an item reorders it and persists", async ({ page }) => {
+        await addItemViaApi(page, listId, sectionId, "Aaa Item");
+        await addItemViaApi(page, listId, sectionId, "Bbb Item");
+        await addItemViaApi(page, listId, sectionId, "Ccc Item");
+        await page.reload();
+
+        // Initial order top-to-bottom: Aaa, Bbb, Ccc.
+        expect(await itemY(page, "Aaa Item")).toBeLessThan(
+          await itemY(page, "Ccc Item"),
+        );
+
+        // Drag the last item up onto the first.
+        await dragItemOnto(page, "Ccc Item", "Aaa Item");
+
+        await expect
+          .poll(
+            async () =>
+              (await itemY(page, "Ccc Item")) < (await itemY(page, "Aaa Item")),
+          )
+          .toBe(true);
+
+        await page.reload();
+        expect(await itemY(page, "Ccc Item")).toBeLessThan(
+          await itemY(page, "Aaa Item"),
+        );
       });
     });
   });

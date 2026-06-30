@@ -146,6 +146,7 @@ export default function EditableItemRow({
         }}
         {...listeners}
         {...attributes}
+        aria-label={`Reorder ${item.name}`}
         onClick={(e) => e.stopPropagation()}
       >
         <DotsSixVerticalIcon size={12} />
