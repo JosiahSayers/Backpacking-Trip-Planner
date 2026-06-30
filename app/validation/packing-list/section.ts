@@ -1,8 +1,8 @@
 import { idParam } from "$/validation/shared";
+import { sortPosition } from "$/validation/sortable";
 import z from "zod";
 
 const name = z.string().trim().min(3);
-const sortPosition = z.int();
 
 export const createSection = z.strictObject({
   name,

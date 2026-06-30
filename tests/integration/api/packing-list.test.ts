@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "bun:test";
-import { getAuthCookies, testAuth } from "../../helpers/auth";
+import { getAuthCookies } from "../../helpers/auth";
 import supertest from "supertest";
 import { app } from "$/server";
 import { db } from "$/utils/db";

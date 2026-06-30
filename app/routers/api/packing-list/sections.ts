@@ -1,5 +1,11 @@
+import { itemsRouter } from "$/routers/api/packing-list/section-items";
 import { transformers } from "$/transformers";
 import { db } from "$/utils/db";
+import {
+  getHighestSort,
+  newPositionIsNotLastPosition,
+  sendOutOfOrderResponse,
+} from "$/utils/sorting";
 import {
   createSection,
   sectionParams,
@@ -19,18 +25,16 @@ sectionsRouter.post(
       where: { packingListId: Number(req.params.id) },
     });
 
-    const currentHighestSort =
-      Math.max(...existingSections.map((s) => s.sortPosition)) ?? 0;
-
-    console.log({ currentHighestSort, pos: req.body.sortPosition });
+    const currentHighestSort = getHighestSort(existingSections);
 
     if (
-      req.body.sortPosition != undefined &&
-      req.body.sortPosition <= currentHighestSort
+      newPositionIsNotLastPosition(currentHighestSort, req.body.sortPosition)
     ) {
-      return res.status(400).json({
-        error: `"sortPosition" should be higher than the current highest sort position. You provided: ${req.body.sortPosition}, currentHighest: ${currentHighestSort}`,
-      });
+      return sendOutOfOrderResponse(
+        res,
+        currentHighestSort,
+        req.body.sortPosition,
+      );
     }
 
     if (existingSections.find((s) => s.name === req.body.name)) {
@@ -88,12 +92,10 @@ sectionsRouter.patch(
       },
     });
 
-    const currentHighestSort =
-      Math.max(...existingSections.map((s) => s.sortPosition)) ?? 0;
+    const currentHighestSort = getHighestSort(existingSections);
 
     if (
-      req.body.sortPosition != undefined &&
-      req.body.sortPosition <= currentHighestSort
+      newPositionIsNotLastPosition(currentHighestSort, req.body.sortPosition)
     ) {
       // Find sections that are greater than or equal to the new sort position
       const sectionsToIncrement = existingSections.filter(
@@ -121,3 +123,5 @@ sectionsRouter.patch(
     });
   },
 );
+
+sectionsRouter.use("/:sectionId/items", itemsRouter);
