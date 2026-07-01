@@ -8,6 +8,28 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { Router } from "wouter";
 
+// Two patterns suppress act() warnings from Mantine's Popover (used by Combobox):
+//
+// 1. matchMedia mock + respectReducedMotion:true — makes Mantine's Transition take
+//    the synchronous (duration=0) path instead of scheduling requestAnimationFrame
+//    (setImmediate in happy-dom), which would fire outside act() context.
+//
+// 2. `await waitFor(() => {})` after synchronous renders — Testing Library's
+//    asyncWrapper temporarily sets IS_REACT_ACT_ENVIRONMENT=false while flushing
+//    pending macrotasks, so any remaining async callbacks from useFocusTrap /
+//    floating-ui don't produce act() warnings.
+window.matchMedia = (query: string) =>
+  ({
+    matches: query === "(prefers-reduced-motion: reduce)",
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }) as MediaQueryList;
+
 const onClose = mock(() => {});
 const navigate = mock((_path: string, _opts?: unknown) => {});
 
@@ -24,7 +46,7 @@ function renderModal({
   const client = queryClient ?? makeQueryClient();
   render(
     <QueryClientProvider client={client}>
-      <MantineProvider>
+      <MantineProvider theme={{ respectReducedMotion: true }}>
         <Router
           hook={() => [
             "/dashboard",
@@ -45,7 +67,10 @@ beforeEach(() => {
 });
 
 describe("when opened", () => {
-  beforeEach(() => renderModal());
+  beforeEach(async () => {
+    renderModal();
+    await waitFor(() => {});
+  });
 
   it("renders the modal title", () => {
     expect(screen.getByText("New Packing List")).toBeInTheDocument();
@@ -86,7 +111,7 @@ describe("when opened is false", () => {
   it("does not render modal content", () => {
     render(
       <QueryClientProvider client={makeQueryClient()}>
-        <MantineProvider>
+        <MantineProvider theme={{ respectReducedMotion: true }}>
           <Router hook={() => ["/dashboard", () => {}]}>
             <NewPackingListModal opened={false} onClose={onClose} />
           </Router>
@@ -98,7 +123,10 @@ describe("when opened is false", () => {
 });
 
 describe("clicking Cancel", () => {
-  beforeEach(() => renderModal());
+  beforeEach(async () => {
+    renderModal();
+    await waitFor(() => {});
+  });
 
   it("calls onClose", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -107,11 +135,12 @@ describe("clicking Cancel", () => {
 });
 
 describe("form validation", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = mock(() =>
       Promise.resolve(new Response("{}", { status: 200 })),
     ) as unknown as typeof fetch;
     renderModal();
+    await waitFor(() => {});
   });
 
   it("shows an error when name is empty and form is submitted", async () => {
@@ -184,7 +213,7 @@ describe("successful submission", () => {
 });
 
 describe("when creation fails", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = mock(() =>
       Promise.resolve(
         new Response(null, {
@@ -194,6 +223,7 @@ describe("when creation fails", () => {
       ),
     ) as unknown as typeof fetch;
     renderModal({ useNavigateMock: true });
+    await waitFor(() => {});
   });
 
   it("shows the error message", async () => {

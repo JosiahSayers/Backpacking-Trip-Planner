@@ -81,7 +81,7 @@ export function usePackingListSearch(query: string, publicOnly = false) {
     queryFn: () =>
       apiClient<{ packingLists: ClientPackingList[] }>(
         `/api/packing-lists?query=${encodeURIComponent(query)}&publicOnly=${encodeURIComponent(publicOnly.toString())}`,
-      ).then((res) => res.packingLists),
+      ).then((res) => res.packingLists ?? []),
     enabled: query.length > 0,
   });
 }
