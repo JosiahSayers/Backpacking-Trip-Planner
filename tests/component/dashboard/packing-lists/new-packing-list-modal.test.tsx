@@ -272,8 +272,14 @@ describe("when creation fails", () => {
 
 describe("copy from existing list search", () => {
   const searchResults: Partial<ClientPackingList>[] = [
-    { id: 1, name: "Weekend Kit" },
-    { id: 2, name: "Weekend Warrior" },
+    {
+      id: 1,
+      name: "Weekend Kit",
+      totalSections: 2,
+      totalItems: 6,
+      description: "A light setup for a two night trip.",
+    },
+    { id: 2, name: "Weekend Warrior", totalSections: 1, totalItems: 3 },
   ];
 
   function renderWithSearchData(query: string) {
@@ -305,6 +311,21 @@ describe("copy from existing list search", () => {
     await waitFor(() => {
       expect(screen.getByText("Weekend Kit")).toBeInTheDocument();
       expect(screen.getByText("Weekend Warrior")).toBeInTheDocument();
+    });
+  });
+
+  it("shows section/item counts and description for each result", async () => {
+    renderWithSearchData("Week");
+
+    const searchInput = screen.getByLabelText("Copy from existing list");
+    fireEvent.change(searchInput, { target: { value: "Week" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("2 sections · 6 items")).toBeInTheDocument();
+      expect(
+        screen.getByText("A light setup for a two night trip."),
+      ).toBeInTheDocument();
+      expect(screen.getByText("1 section · 3 items")).toBeInTheDocument();
     });
   });
 

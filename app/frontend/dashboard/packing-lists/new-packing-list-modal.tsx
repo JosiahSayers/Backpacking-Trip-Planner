@@ -1,8 +1,8 @@
+import Error from "$/frontend/shared-components/error";
 import {
   useCreatePackingList,
   usePackingListSearch,
 } from "$/frontend/utils/api/packing-list";
-import Error from "$/frontend/shared-components/error";
 import { packingListName } from "$/validation/packing-list";
 import {
   Button,
@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useDebouncedValue } from "@mantine/hooks";
+import { ListBulletsIcon } from "@phosphor-icons/react";
 import { useLocation } from "wouter";
 import { z } from "zod/v4";
 
@@ -119,7 +120,29 @@ export default function NewPackingListModal({ opened, onClose }: Props) {
               <Combobox.Options>
                 {searchResults.map((list) => (
                   <Combobox.Option key={list.id} value={String(list.id)}>
-                    {list.name}
+                    <Group gap="xs" wrap="nowrap" align="flex-start">
+                      <ListBulletsIcon
+                        size={16}
+                        color="var(--mantine-color-trail-green-6)"
+                        style={{ marginTop: 3, flexShrink: 0 }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <Text size="sm" fw={600} lineClamp={1}>
+                          {list.name}
+                        </Text>
+                        <Text size="xs" c="dimmed" lineClamp={1}>
+                          {list.totalSections} section
+                          {list.totalSections !== 1 ? "s" : ""} ·{" "}
+                          {list.totalItems} item
+                          {list.totalItems !== 1 ? "s" : ""}
+                        </Text>
+                        {list.description && (
+                          <Text size="xs" c="dimmed" lineClamp={1}>
+                            {list.description}
+                          </Text>
+                        )}
+                      </div>
+                    </Group>
                   </Combobox.Option>
                 ))}
               </Combobox.Options>
