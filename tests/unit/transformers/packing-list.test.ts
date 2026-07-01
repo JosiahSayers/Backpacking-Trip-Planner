@@ -15,6 +15,7 @@ describe("transform", () => {
         copiedFromPackingListId: list.copiedFromPackingListId,
         editable: false,
         totalItems: 0,
+        totalSections: 0,
         totalUniqueItems: 0,
       });
     });
@@ -90,6 +91,7 @@ describe("transform", () => {
         copiedFromPackingListId: input.copiedFromPackingListId,
         editable: false,
         totalItems: 4,
+        totalSections: 2,
         totalUniqueItems:
           item1_1.quantity +
           item1_2.quantity +

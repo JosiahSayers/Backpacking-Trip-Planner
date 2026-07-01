@@ -32,6 +32,7 @@ describe("GET /", () => {
             "public": true,
             "sourceUrl": "https://www.rei.com/dam/backpacking_checklist_printable.pdf",
             "totalItems": 85,
+            "totalSections": 10,
             "totalUniqueItems": 85,
           },
         ],
@@ -77,6 +78,7 @@ describe("GET /", () => {
           copiedFromPackingListId: null,
           editable: true,
           totalItems: 0,
+          totalSections: 0,
           totalUniqueItems: 0,
         },
       ],
@@ -776,6 +778,7 @@ describe("GET /:id", () => {
           ],
           "sourceUrl": "https://www.rei.com/dam/backpacking_checklist_printable.pdf",
           "totalItems": 85,
+          "totalSections": 10,
           "totalUniqueItems": 85,
         },
       }
@@ -955,6 +958,7 @@ describe("POST /", () => {
         sections: [],
         sourceUrl: null,
         totalItems: 0,
+        totalSections: 0,
         totalUniqueItems: 0,
       },
     });

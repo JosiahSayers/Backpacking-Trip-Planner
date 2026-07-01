@@ -16,7 +16,12 @@ export type ClientPackingList = Pick<
   | "sourceUrl"
   | "description"
   | "copiedFromPackingListId"
-> & { editable: boolean; totalItems: number; totalUniqueItems: number };
+> & {
+  editable: boolean;
+  totalItems: number;
+  totalUniqueItems: number;
+  totalSections: number;
+};
 export type ClientFullPackingList = ClientPackingList & {
   sections: Array<
     ClientPackingListSection & { items: Array<ClientPackingListItem> }
@@ -46,6 +51,7 @@ export function transform<ReturnFull extends boolean>(
     editable: item.userId != null && item.userId === currentUserId,
     totalItems: flatItems.length,
     totalUniqueItems: flatItems.reduce((acc, item) => acc + item.quantity, 0),
+    totalSections: item.packingListSections.length,
   };
 
   if (returnFullVersion) {
