@@ -1,5 +1,6 @@
+import PackingListCard from "$/frontend/dashboard/packing-lists/packing-list-card";
+import NewPackingListModal from "$/frontend/dashboard/packing-lists/new-packing-list-modal";
 import { usePackingLists } from "$/frontend/utils/api/packing-list";
-import type { ClientPackingList } from "$/transformers/packing-list";
 import {
   Button,
   Card,
@@ -11,47 +12,26 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { FilePdfIcon, ListBulletsIcon, PlusIcon } from "@phosphor-icons/react";
-
-function PackingListCard({ list }: { list: ClientPackingList }) {
-  return (
-    <Card>
-      <Group gap="xs" mb="xs">
-        <ListBulletsIcon size={18} />
-        <Text fw={600}>{list.name}</Text>
-      </Group>
-      <Group gap="md" c="dimmed" mb="md">
-        <Text size="sm">
-          {list.totalItems === list.totalUniqueItems
-            ? `${list.totalItems} items`
-            : `${list.totalItems} items (${list.totalUniqueItems} unique)`}
-        </Text>
-      </Group>
-      <Button
-        size="xs"
-        variant="subtle"
-        leftSection={<FilePdfIcon size={14} />}
-        component="a"
-        href={`/api/packing-lists/${list.id}/pdf`}
-        target="_blank"
-      >
-        Export PDF
-      </Button>
-    </Card>
-  );
-}
+import { PlusIcon } from "@phosphor-icons/react";
 
 export default function PackingLists() {
   const { data: lists, isFetching } = usePackingLists();
   const [showAll, { toggle: toggleShowAll }] = useDisclosure(false);
+  const [modalOpened, { open: openModal, close: closeModal }] =
+    useDisclosure(false);
 
   return (
     <section>
+      <NewPackingListModal opened={modalOpened} onClose={closeModal} />
       <Group justify="space-between" mb="md" align="flex-end">
         <div>
           <Title order={2}>My Packing Lists</Title>
         </div>
-        <Button leftSection={<PlusIcon size={16} />} variant="light">
+        <Button
+          leftSection={<PlusIcon size={16} />}
+          variant="light"
+          onClick={openModal}
+        >
           New List
         </Button>
       </Group>
@@ -77,20 +57,26 @@ export default function PackingLists() {
           </SimpleGrid>
 
           {lists.length > 3 && (
-            <Collapse expanded={showAll}>
-              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md" mt="md">
-                {lists.slice(3).map((list) => (
-                  <PackingListCard key={list.id} list={list} />
-                ))}
-              </SimpleGrid>
-            </Collapse>
-          )}
+            <>
+              <Collapse expanded={showAll}>
+                <SimpleGrid
+                  cols={{ base: 1, sm: 2, md: 3 }}
+                  spacing="md"
+                  mt="md"
+                >
+                  {lists.slice(3).map((list) => (
+                    <PackingListCard key={list.id} list={list} />
+                  ))}
+                </SimpleGrid>
+              </Collapse>
 
-          <Group justify="flex-end" mt="sm">
-            <Button variant="subtle" onClick={toggleShowAll}>
-              {showAll ? "View less" : "View all lists"}
-            </Button>
-          </Group>
+              <Group justify="flex-end" mt="sm">
+                <Button variant="subtle" onClick={toggleShowAll}>
+                  {showAll ? "View less" : "View all lists"}
+                </Button>
+              </Group>
+            </>
+          )}
         </>
       )}
     </section>

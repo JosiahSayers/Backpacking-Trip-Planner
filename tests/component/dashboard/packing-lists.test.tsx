@@ -103,29 +103,14 @@ describe("when there are 3 or fewer lists", () => {
 
   beforeEach(() => renderComponent(lists));
 
-  it("renders each list by name", () => {
-    expect(screen.getByText("Weekend Kit")).toBeInTheDocument();
-    expect(screen.getByText("Emergency Bag")).toBeInTheDocument();
+  it("renders a card for each list", () => {
+    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(2);
   });
 
-  it("renders the item count for each list", () => {
-    expect(screen.getByText("18 items")).toBeInTheDocument();
-    expect(screen.getByText("12 items (16 unique)")).toBeInTheDocument();
-  });
-
-  it("renders an 'Export PDF' link for each list", () => {
-    const links = screen.getAllByRole("link", { name: "Export PDF" });
-    expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute("href", "/api/packing-lists/1/pdf");
-    expect(links[0]).toHaveAttribute("target", "_blank");
-    expect(links[1]).toHaveAttribute("href", "/api/packing-lists/2/pdf");
-    expect(links[1]).toHaveAttribute("target", "_blank");
-  });
-
-  it("renders the 'View all lists' button", () => {
+  it("does not render the 'View all lists' button", () => {
     expect(
-      screen.getByRole("button", { name: "View all lists" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "View all lists" }),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -140,9 +125,7 @@ describe("when there are more than 3 lists", () => {
   beforeEach(() => renderComponent(lists));
 
   it("renders only the first 3 lists initially", () => {
-    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
-      3,
-    );
+    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(3);
   });
 
   it("renders the 'View all lists' button", () => {
@@ -154,9 +137,9 @@ describe("when there are more than 3 lists", () => {
   it("shows all list cards after clicking 'View all lists'", async () => {
     fireEvent.click(screen.getByRole("button", { name: "View all lists" }));
     await waitFor(() =>
-      expect(
-        screen.getAllByRole("link", { name: "Export PDF" }),
-      ).toHaveLength(4),
+      expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
+        4,
+      ),
     );
   });
 
@@ -170,14 +153,12 @@ describe("when there are more than 3 lists", () => {
   it("collapses back to 3 cards after clicking 'View less'", async () => {
     fireEvent.click(screen.getByRole("button", { name: "View all lists" }));
     await waitFor(() =>
-      expect(
-        screen.getAllByRole("link", { name: "Export PDF" }),
-      ).toHaveLength(4),
+      expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
+        4,
+      ),
     );
     fireEvent.click(screen.getByRole("button", { name: "View less" }));
-    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
-      3,
-    );
+    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(3);
   });
 
   it("changes button text back to 'View all lists' after clicking 'View less'", () => {
