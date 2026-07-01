@@ -1,8 +1,13 @@
 import { db } from "$/utils/db";
+import { publicGearCategories } from "./gear-categories";
 import { reiPackingList } from "./packing-lists/rei-packing-list";
 import { reiWinterBackcountryCampingChecklist } from "./packing-lists/rei-winter-backcountry-camping-checklist";
 
-const productionSeeds = [reiPackingList, reiWinterBackcountryCampingChecklist];
+const productionSeeds = [
+  publicGearCategories,
+  reiPackingList,
+  reiWinterBackcountryCampingChecklist,
+];
 
 export default async function applyProductionSeeds() {
   for (const seed of productionSeeds) {
