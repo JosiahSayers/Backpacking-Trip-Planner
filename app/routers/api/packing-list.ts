@@ -24,19 +24,28 @@ packingListRouter.get(
   validate({ query: packingListSearch }),
   async (req, res) => {
     const publicOnly = req.query.publicOnly === "true";
+    let take: number | undefined;
+    // Take should be undefined when loading the user's entire packing list dataset
+    if (req.query.query || publicOnly) {
+      const parsedTake = Number(req.query.take);
+      take = isNaN(parsedTake) ? 5 : parsedTake;
+    }
+
     const matchingPackingLists = await db.packingList.findMany({
-      where: req.query.query
+      where: publicOnly
         ? {
-            name: {
-              contains: req.query.query,
-              mode: "insensitive",
-            },
-            public: publicOnly ? true : undefined,
-            OR: publicOnly
-              ? undefined
-              : [{ public: true }, { userId: req.session!.user.id }],
+            public: true,
+            name: req.query.query
+              ? { contains: req.query.query, mode: "insensitive" }
+              : undefined,
           }
-        : { userId: req.session!.user.id },
+        : req.query.query
+          ? {
+              name: { contains: req.query.query, mode: "insensitive" },
+              OR: [{ public: true }, { userId: req.session!.user.id }],
+            }
+          : { userId: req.session!.user.id },
+      take,
       include: {
         packingListSections: {
           include: {

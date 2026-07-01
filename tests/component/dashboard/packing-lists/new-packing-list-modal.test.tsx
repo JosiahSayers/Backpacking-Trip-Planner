@@ -140,7 +140,11 @@ describe("form validation", () => {
       Promise.resolve(new Response("{}", { status: 200 })),
     ) as unknown as typeof fetch;
     renderModal();
-    await waitFor(() => {});
+    // Prepopulating the combobox fires a search request on mount; wait for it
+    // and clear it so fetch-call assertions below only reflect actions taken
+    // in each test.
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    (global.fetch as unknown as ReturnType<typeof mock>).mockClear();
   });
 
   it("shows an error when name is empty and form is submitted", async () => {
@@ -188,13 +192,28 @@ describe("successful submission", () => {
 
   it("calls the API with the list name", async () => {
     renderModal();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    (global.fetch as unknown as ReturnType<typeof mock>).mockClear();
     fireEvent.change(screen.getByRole("textbox", { name: "List name" }), {
       target: { value: "Weekend Kit" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Create list" }));
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    // A successful create invalidates all "packing-lists"-prefixed queries,
+    // including the prepopulated search, so a second (GET) call can follow
+    // the POST — find the POST explicitly rather than assuming call order.
+    await waitFor(() => {
+      const fetchMock = global.fetch as unknown as ReturnType<typeof mock>;
+      const postCall = fetchMock.mock.calls.find(
+        (call: unknown[]) =>
+          (call[1] as RequestInit | undefined)?.method === "POST",
+      );
+      expect(postCall).toBeDefined();
+    });
     const fetchMock = global.fetch as unknown as ReturnType<typeof mock>;
-    const [, init] = fetchMock.mock.calls[0]!;
+    const [, init] = fetchMock.mock.calls.find(
+      (call: unknown[]) =>
+        (call[1] as RequestInit | undefined)?.method === "POST",
+    )! as [unknown, RequestInit];
     expect(JSON.parse(init.body as string)).toMatchObject({
       name: "Weekend Kit",
     });
@@ -202,6 +221,7 @@ describe("successful submission", () => {
 
   it("navigates to the new packing list", async () => {
     renderModal({ useNavigateMock: true });
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
     fireEvent.change(screen.getByRole("textbox", { name: "List name" }), {
       target: { value: "Weekend Kit" },
     });
@@ -252,8 +272,14 @@ describe("when creation fails", () => {
 
 describe("copy from existing list search", () => {
   const searchResults: Partial<ClientPackingList>[] = [
-    { id: 1, name: "Weekend Kit" },
-    { id: 2, name: "Weekend Warrior" },
+    {
+      id: 1,
+      name: "Weekend Kit",
+      totalSections: 2,
+      totalItems: 6,
+      description: "A light setup for a two night trip.",
+    },
+    { id: 2, name: "Weekend Warrior", totalSections: 1, totalItems: 3 },
   ];
 
   function renderWithSearchData(query: string) {
@@ -262,6 +288,19 @@ describe("copy from existing list search", () => {
     renderModal({ queryClient });
     return queryClient;
   }
+
+  beforeEach(() => {
+    // The combobox prepopulates on mount with an empty-query search; give it
+    // a harmless response so tests aren't tripped up by a real network call.
+    global.fetch = mock(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ packingLists: [] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    ) as unknown as typeof fetch;
+  });
 
   it("shows matching lists in the dropdown after typing", async () => {
     renderWithSearchData("Week");
@@ -272,6 +311,21 @@ describe("copy from existing list search", () => {
     await waitFor(() => {
       expect(screen.getByText("Weekend Kit")).toBeInTheDocument();
       expect(screen.getByText("Weekend Warrior")).toBeInTheDocument();
+    });
+  });
+
+  it("shows section/item counts and description for each result", async () => {
+    renderWithSearchData("Week");
+
+    const searchInput = screen.getByLabelText("Copy from existing list");
+    fireEvent.change(searchInput, { target: { value: "Week" } });
+
+    await waitFor(() => {
+      expect(screen.getByText("2 sections · 6 items")).toBeInTheDocument();
+      expect(
+        screen.getByText("A light setup for a two night trip."),
+      ).toBeInTheDocument();
+      expect(screen.getByText("1 section · 3 items")).toBeInTheDocument();
     });
   });
 
@@ -298,6 +352,8 @@ describe("copy from existing list search", () => {
     ) as unknown as typeof fetch;
 
     renderWithSearchData("Week");
+    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+    (global.fetch as unknown as ReturnType<typeof mock>).mockClear();
 
     fireEvent.change(screen.getByRole("textbox", { name: "List name" }), {
       target: { value: "Emergency Bag" },
