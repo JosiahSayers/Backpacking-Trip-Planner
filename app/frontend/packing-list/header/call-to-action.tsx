@@ -1,37 +1,59 @@
 import { usePackingList } from "$/frontend/packing-list/packing-list-context";
-import { Button } from "@mantine/core";
-import { CopyIcon, PlusIcon } from "@phosphor-icons/react";
+import { Button, Group } from "@mantine/core";
+import { CopyIcon, FilePdfIcon, PlusIcon } from "@phosphor-icons/react";
 
 interface Props {
+  listId: number;
   onAddSection: () => void;
   onCopy?: () => void;
   isCopying?: boolean;
 }
 
 export default function CallToAction({
+  listId,
   onAddSection,
   onCopy,
   isCopying,
 }: Props) {
   const { editable } = usePackingList();
 
-  return editable ? (
+  const pdfButton = (
     <Button
-      leftSection={<PlusIcon size={16} />}
+      component="a"
+      href={`/api/packing-lists/${listId}/pdf`}
+      target="_blank"
+      rel="noopener noreferrer"
+      leftSection={<FilePdfIcon size={16} />}
       variant="default"
       size="md"
-      onClick={onAddSection}
     >
-      Add section
+      Export PDF
     </Button>
+  );
+
+  return editable ? (
+    <Group gap="sm">
+      {pdfButton}
+      <Button
+        leftSection={<PlusIcon size={16} />}
+        variant="default"
+        size="md"
+        onClick={onAddSection}
+      >
+        Add section
+      </Button>
+    </Group>
   ) : (
-    <Button
-      leftSection={<CopyIcon size={16} />}
-      size="md"
-      onClick={onCopy}
-      loading={isCopying}
-    >
-      Copy to my lists
-    </Button>
+    <Group gap="sm">
+      {pdfButton}
+      <Button
+        leftSection={<CopyIcon size={16} />}
+        size="md"
+        onClick={onCopy}
+        loading={isCopying}
+      >
+        Copy to my lists
+      </Button>
+    </Group>
   );
 }

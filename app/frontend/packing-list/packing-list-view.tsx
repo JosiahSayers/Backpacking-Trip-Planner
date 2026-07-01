@@ -181,6 +181,7 @@ export default function PackingListView({ editable = false, list }: Props) {
               }
             />
             <CallToAction
+              listId={list.id}
               onAddSection={handleAddSection}
               onCopy={handleCopy}
               isCopying={copyList.isPending}

@@ -8,11 +8,15 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 const onAddSection = mock(() => {});
 const onCopy = mock(() => {});
 
-function renderComponent(editable: boolean) {
+function renderComponent(editable: boolean, listId = 42) {
   render(
     <MantineProvider>
       <PackingListProvider value={{ editable }}>
-        <CallToAction onAddSection={onAddSection} onCopy={onCopy} />
+        <CallToAction
+          listId={listId}
+          onAddSection={onAddSection}
+          onCopy={onCopy}
+        />
       </PackingListProvider>
     </MantineProvider>,
   );
@@ -21,6 +25,22 @@ function renderComponent(editable: boolean) {
 beforeEach(() => {
   onAddSection.mockReset();
   onCopy.mockReset();
+});
+
+describe("Export PDF", () => {
+  it("renders in editable mode with the correct href", () => {
+    renderComponent(true, 7);
+    const link = screen.getByRole("link", { name: /export pdf/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/api/packing-lists/7/pdf");
+  });
+
+  it("renders in non-editable mode with the correct href", () => {
+    renderComponent(false, 99);
+    const link = screen.getByRole("link", { name: /export pdf/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/api/packing-lists/99/pdf");
+  });
 });
 
 describe("when editable", () => {

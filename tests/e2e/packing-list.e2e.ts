@@ -386,6 +386,20 @@ test.describe("Packing List Page", () => {
         );
       });
     });
+
+    test("Export PDF link points to the list's PDF endpoint and returns a PDF", async ({
+      page,
+    }) => {
+      const link = page.getByRole("link", { name: /export pdf/i });
+      await expect(link).toBeVisible();
+
+      const href = await link.getAttribute("href");
+      expect(href).toBe(`/api/packing-lists/${listId}/pdf`);
+
+      const response = await page.request.get(href!);
+      expect(response.ok()).toBe(true);
+      expect(response.headers()["content-type"]).toContain("application/pdf");
+    });
   });
 
   test.describe("a non-editable list (public, not owned)", () => {
@@ -415,6 +429,20 @@ test.describe("Packing List Page", () => {
       await expect(
         page.getByRole("heading", { level: 1, name: expectedName }),
       ).toBeVisible();
+    });
+
+    test("Export PDF link points to the list's PDF endpoint and returns a PDF", async ({
+      page,
+    }) => {
+      const link = page.getByRole("link", { name: /export pdf/i });
+      await expect(link).toBeVisible();
+
+      const href = await link.getAttribute("href");
+      expect(href).toMatch(/\/api\/packing-lists\/\d+\/pdf$/);
+
+      const response = await page.request.get(href!);
+      expect(response.ok()).toBe(true);
+      expect(response.headers()["content-type"]).toContain("application/pdf");
     });
   });
 });
