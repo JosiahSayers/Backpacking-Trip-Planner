@@ -116,6 +116,7 @@ packingListRouter.post(
           data: {
             userId: req.session!.user.id,
             name,
+            description: copiedList.description,
             copiedFromPackingListId,
           },
         });
@@ -190,8 +191,23 @@ packingListRouter.get(
   "/:id/pdf",
   userCanAccessPackingList,
   async (req, res) => {
-    res.attachment("packing-list.pdf");
-    return await generatePackingListPdf(Number(req.params.id), res);
+    const packingList = await db.packingList.findFirst({
+      where: { id: Number(req.params.id) },
+      include: {
+        owner: true,
+        packingListSections: {
+          include: {
+            items: true,
+          },
+        },
+      },
+    });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${packingList!.name}.pdf"`,
+    );
+    return await generatePackingListPdf(packingList!, res);
   },
 );
 

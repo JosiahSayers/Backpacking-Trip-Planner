@@ -31,6 +31,9 @@ function PackingListCard({ list }: { list: ClientPackingList }) {
         size="xs"
         variant="subtle"
         leftSection={<FilePdfIcon size={14} />}
+        component="a"
+        href={`/api/packing-lists/${list.id}/pdf`}
+        target="_blank"
       >
         Export PDF
       </Button>

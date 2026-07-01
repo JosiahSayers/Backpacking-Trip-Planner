@@ -1,11 +1,11 @@
-import { beforeAll, describe, expect, it } from "bun:test";
-import { getAuthCookies } from "../../helpers/auth";
-import supertest from "supertest";
 import { app } from "$/server";
-import { db } from "$/utils/db";
 import { transformers } from "$/transformers";
+import { db } from "$/utils/db";
 import type { User } from "better-auth";
+import { beforeAll, describe, expect, it } from "bun:test";
+import supertest from "supertest";
 import type { PackingList } from "../../../generated/prisma/client";
+import { getAuthCookies } from "../../helpers/auth";
 
 let authCookies: Array<string>;
 
@@ -989,6 +989,9 @@ describe("POST /", () => {
     expect(body.packingList.copiedFromPackingListId).toBe(
       transformedExistingList.id,
     );
+    expect(body.packingList.description).toBe(
+      transformedExistingList.description,
+    );
     const newWithoutIds = body.packingList.sections.map((section: any) => ({
       ...section,
       id: undefined,
@@ -1226,7 +1229,10 @@ describe("GET /:id/pdf", () => {
       .get(`/api/packing-lists/${reiPackingList!.id}/pdf`)
       .set("Cookie", authCookies)
       .expect("Content-Type", "application/pdf")
-      .expect("content-disposition", 'attachment; filename="packing-list.pdf"')
+      .expect(
+        "content-disposition",
+        `inline; filename="${reiPackingList.name}.pdf"`,
+      )
       .expect(200);
   });
 
@@ -1243,7 +1249,7 @@ describe("GET /:id/pdf", () => {
       .get(`/api/packing-lists/${newListId}/pdf`)
       .set("Cookie", authCookies)
       .expect("Content-Type", "application/pdf")
-      .expect("content-disposition", 'attachment; filename="packing-list.pdf"')
+      .expect("content-disposition", 'inline; filename="My New List.pdf"')
       .expect(200);
   });
 

@@ -60,7 +60,7 @@ describe("while loading", () => {
 
   it("does not render list cards", () => {
     expect(
-      screen.queryByRole("button", { name: "Export PDF" }),
+      screen.queryByRole("link", { name: "Export PDF" }),
     ).not.toBeInTheDocument();
   });
 });
@@ -113,10 +113,13 @@ describe("when there are 3 or fewer lists", () => {
     expect(screen.getByText("12 items (16 unique)")).toBeInTheDocument();
   });
 
-  it("renders an 'Export PDF' button for each list", () => {
-    expect(screen.getAllByRole("button", { name: "Export PDF" })).toHaveLength(
-      2,
-    );
+  it("renders an 'Export PDF' link for each list", () => {
+    const links = screen.getAllByRole("link", { name: "Export PDF" });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "/api/packing-lists/1/pdf");
+    expect(links[0]).toHaveAttribute("target", "_blank");
+    expect(links[1]).toHaveAttribute("href", "/api/packing-lists/2/pdf");
+    expect(links[1]).toHaveAttribute("target", "_blank");
   });
 
   it("renders the 'View all lists' button", () => {
@@ -137,7 +140,7 @@ describe("when there are more than 3 lists", () => {
   beforeEach(() => renderComponent(lists));
 
   it("renders only the first 3 lists initially", () => {
-    expect(screen.getAllByRole("button", { name: "Export PDF" })).toHaveLength(
+    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
       3,
     );
   });
@@ -152,7 +155,7 @@ describe("when there are more than 3 lists", () => {
     fireEvent.click(screen.getByRole("button", { name: "View all lists" }));
     await waitFor(() =>
       expect(
-        screen.getAllByRole("button", { name: "Export PDF" }),
+        screen.getAllByRole("link", { name: "Export PDF" }),
       ).toHaveLength(4),
     );
   });
@@ -168,11 +171,11 @@ describe("when there are more than 3 lists", () => {
     fireEvent.click(screen.getByRole("button", { name: "View all lists" }));
     await waitFor(() =>
       expect(
-        screen.getAllByRole("button", { name: "Export PDF" }),
+        screen.getAllByRole("link", { name: "Export PDF" }),
       ).toHaveLength(4),
     );
     fireEvent.click(screen.getByRole("button", { name: "View less" }));
-    expect(screen.getAllByRole("button", { name: "Export PDF" })).toHaveLength(
+    expect(screen.getAllByRole("link", { name: "Export PDF" })).toHaveLength(
       3,
     );
   });
