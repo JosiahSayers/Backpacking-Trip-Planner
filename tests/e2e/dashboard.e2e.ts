@@ -231,6 +231,16 @@ test.describe("Dashboard Page", () => {
         // A brand-new list has 0 items
         await expect(page.getByText("0 items").first()).toBeVisible();
       });
+
+      test("clicking the list name navigates to the packing list page", async ({
+        page,
+      }) => {
+        await page.getByRole("link", { name: listName }).click();
+        await page.waitForURL(/\/packing-lists\/\d+/);
+        await expect(
+          page.getByRole("heading", { level: 1, name: listName }),
+        ).toBeVisible();
+      });
     });
 
     test.describe("showing more than 3 packing lists", () => {
