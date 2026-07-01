@@ -35,6 +35,18 @@ describe("GET /", () => {
             "totalSections": 10,
             "totalUniqueItems": 85,
           },
+          {
+            "copiedFromPackingListId": null,
+            "description": "Winter camping in the backcountry requires more—and slightly different—gear than a summer backpacking trip does.",
+            "editable": false,
+            "id": 2,
+            "name": "REI Winter Backcountry Camping Checklist",
+            "public": true,
+            "sourceUrl": "https://www.rei.com/dam/winter_backcountry_camping_checklist-(1).pdf",
+            "totalItems": 83,
+            "totalSections": 10,
+            "totalUniqueItems": 83,
+          },
         ],
       }
     `);
@@ -1075,7 +1087,7 @@ describe("POST /", () => {
 
     expect(body).toMatchInlineSnapshot(`
       {
-        "error": "Could not find an existing packing list with the id: 2",
+        "error": "Could not find an existing packing list with the id: 3",
       }
     `);
   });

@@ -16,7 +16,7 @@ import {
 import { sortByPosition } from "$/frontend/utils/sort-by-position";
 import type { ClientFullPackingList } from "$/transformers/packing-list";
 import type { ClientPackingListItem } from "$/transformers/packing-list-item";
-import { Divider, Group, Stack, Text } from "@mantine/core";
+import { Box, Divider, Group, Stack, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
@@ -182,24 +182,28 @@ export default function PackingListView({ editable = false, list }: Props) {
     <PackingListProvider value={{ editable }}>
       <Stack gap="xl" maw={1100} mx="auto">
         <Stack gap="xs">
-          <Group justify="space-between" align="flex-start">
-            <PackingListTitle
-              value={list.name}
-              onSave={(name) =>
-                updateList.mutate(
-                  { name },
-                  { onError: notifyError("Couldn't rename list") },
-                )
-              }
-            />
-            <CallToAction
-              listId={list.id}
-              onAddSection={handleAddSection}
-              onDelete={() => setDeleteModalOpen(true)}
-              isDeleting={deleteList.isPending}
-              onCopy={handleCopy}
-              isCopying={copyList.isPending}
-            />
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Box flex={1} miw={0}>
+              <PackingListTitle
+                value={list.name}
+                onSave={(name) =>
+                  updateList.mutate(
+                    { name },
+                    { onError: notifyError("Couldn't rename list") },
+                  )
+                }
+              />
+            </Box>
+            <Box style={{ flexShrink: 0 }}>
+              <CallToAction
+                listId={list.id}
+                onAddSection={handleAddSection}
+                onDelete={() => setDeleteModalOpen(true)}
+                isDeleting={deleteList.isPending}
+                onCopy={handleCopy}
+                isCopying={copyList.isPending}
+              />
+            </Box>
           </Group>
           <PackingListDescription
             value={list.description}
