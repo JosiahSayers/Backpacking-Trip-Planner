@@ -145,7 +145,13 @@ export default function PackingListView({ editable = false, list }: Props) {
 
   function handleEditItem(sectionId: number, item: ClientPackingListItem) {
     updateItem.mutate(
-      { sectionId, itemId: item.id, name: item.name, quantity: item.quantity },
+      {
+        sectionId,
+        itemId: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        sortPosition: item.sortPosition,
+      },
       { onError: notifyError("Couldn't update item") },
     );
   }
