@@ -191,6 +191,37 @@ test.describe("Packing List Page", () => {
       await expect(page.getByText(description)).toBeVisible();
     });
 
+    test("deleting the list navigates to /dashboard and removes the list", async ({
+      page,
+    }) => {
+      await page.getByRole("button", { name: /delete list/i }).click();
+      await expect(page.getByText(`"${listName}"`)).toBeVisible();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+
+      await page.waitForURL("/dashboard");
+      const response = await page.request.get(`/api/packing-lists/${listId}`);
+      expect(response.status()).toBe(404);
+    });
+
+    test("shows an error notification when the delete fails", async ({
+      page,
+    }) => {
+      await page.route(`**/api/packing-lists/${listId}`, (route) => {
+        if (route.request().method() === "DELETE") {
+          return route.fulfill({ status: 500 });
+        }
+        return route.continue();
+      });
+
+      await page.getByRole("button", { name: /delete list/i }).click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+
+      await expect(page.getByText("Couldn't delete list")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 1, name: listName }),
+      ).toBeVisible();
+    });
+
     test.describe("sections", () => {
       test("adding a section reveals it in edit mode and persists", async ({
         page,
@@ -386,6 +417,20 @@ test.describe("Packing List Page", () => {
         );
       });
     });
+
+    test("Export PDF link points to the list's PDF endpoint and returns a PDF", async ({
+      page,
+    }) => {
+      const link = page.getByRole("link", { name: /export pdf/i });
+      await expect(link).toBeVisible();
+
+      const href = await link.getAttribute("href");
+      expect(href).toBe(`/api/packing-lists/${listId}/pdf`);
+
+      const response = await page.request.get(href!);
+      expect(response.ok()).toBe(true);
+      expect(response.headers()["content-type"]).toContain("application/pdf");
+    });
   });
 
   test.describe("a non-editable list (public, not owned)", () => {
@@ -415,6 +460,20 @@ test.describe("Packing List Page", () => {
       await expect(
         page.getByRole("heading", { level: 1, name: expectedName }),
       ).toBeVisible();
+    });
+
+    test("Export PDF link points to the list's PDF endpoint and returns a PDF", async ({
+      page,
+    }) => {
+      const link = page.getByRole("link", { name: /export pdf/i });
+      await expect(link).toBeVisible();
+
+      const href = await link.getAttribute("href");
+      expect(href).toMatch(/\/api\/packing-lists\/\d+\/pdf$/);
+
+      const response = await page.request.get(href!);
+      expect(response.ok()).toBe(true);
+      expect(response.headers()["content-type"]).toContain("application/pdf");
     });
   });
 });

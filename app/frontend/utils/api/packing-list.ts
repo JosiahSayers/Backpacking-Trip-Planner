@@ -81,7 +81,7 @@ export function usePackingListSearch(query: string, publicOnly = false) {
     queryFn: () =>
       apiClient<{ packingLists: ClientPackingList[] }>(
         `/api/packing-lists?query=${encodeURIComponent(query)}&publicOnly=${encodeURIComponent(publicOnly.toString())}`,
-      ).then((res) => res.packingLists),
+      ).then((res) => res.packingLists ?? []),
     enabled: query.length > 0,
   });
 }
@@ -104,6 +104,18 @@ export function usePackingList(id: number) {
         `/api/packing-lists/${id}`,
       ).then((res) => res.packingList),
     select: sortPackingList,
+  });
+}
+
+export function useDeletePackingList(listId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient(`/api/packing-lists/${listId}`, { method: "DELETE" }),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: packingListKeys.detail(listId) });
+      queryClient.invalidateQueries({ queryKey: packingListKeys.all() });
+    },
   });
 }
 
